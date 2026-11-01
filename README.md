@@ -32,6 +32,12 @@ No key or no internet: `npm run mock` with `MOCK_AI=1`.
 
 Browsers only allow the microphone on `https` or `localhost`, so **Hold to talk works on the laptop**; on the phone use typed chat and the necklace.
 
+## Online (GitHub Pages)
+
+Every push to `main` deploys the app to https://pankqx.github.io/MindMirror/ (workflow in `.github/workflows/pages.yml`).
+It runs fully in the browser with sample data. With `npm run hub` running on the same laptop, Chrome also reaches the hub on localhost.
+On a phone, the online copy works without the hub (typed chat answers offline).
+
 ## Demo on stage
 
 1. Start the hub, then the app. The top bar shows **Hub live** when they can talk.
