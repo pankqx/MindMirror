@@ -1,59 +1,61 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
 /*
-  MindMirror look: calm paper by day, quiet night by night.
-  Kishore's palette (indigo, sage, cream, coral, ink) is kept; every colour is a
-  CSS variable so the dark theme is a swap, not a rewrite. Red is for urgent help only.
+  MindMirror look: ink on paper.
+  One serif for voice (Instrument Serif), one sans for reading (Inter), one accent (indigo).
+  Flat surfaces separated by hairlines, not shadows. Colour only carries meaning:
+  sage = steady, ochre = watch, coral = needs care, red = urgent help only.
+  Every colour is a CSS variable, so the dark theme is a swap, not a rewrite.
 */
 :root {
-  --bg: #fbf7f0;
-  --bg-2: #f3ede2;
-  --card: #ffffff;
-  --card-2: #f7f2ea;
-  --ink: #2b2d42;
-  --soft: #5f6175;
-  --faint: #9a9aa8;
-  --line: #e9e2d6;
-  --indigo: #4f5bd5;
-  --indigo-ink: #ffffff;
-  --sage: #8fb9a8;
-  --sage-ink: #2f5446;
-  --coral: #e8836b;
-  --coral-ink: #9a4630;
-  --sun: #f5c66b;
-  --sun-ink: #8a6312;
-  --sky: #a9c6e3;
-  --urgent: #d63c32;
-  --shadow: 0 1px 0 rgba(43, 45, 66, 0.03), 0 12px 32px -18px rgba(79, 91, 213, 0.28);
-  --glow-a: rgba(232, 131, 107, 0.16);
-  --glow-b: rgba(143, 185, 168, 0.22);
+  --bg: #f5f2ec;
+  --bg-2: #efebe3;
+  --card: #fbfaf7;
+  --card-2: #efebe3;
+  --ink: #1c1c1e;
+  --soft: #5c5b58;
+  --faint: #95928b;
+  --line: #e2ddd3;
+  --indigo: #3b45b8;
+  --indigo-ink: #fbfaf7;
+  --sage: #7fa894;
+  --sage-ink: #2e5243;
+  --coral: #d9785f;
+  --coral-ink: #8f3f2b;
+  --sun: #d9a441;
+  --sun-ink: #7a5610;
+  --sky: #9dbbd6;
+  --urgent: #c8372d;
+  --shadow: 0 0 0 0 transparent;
+  --glow-a: transparent;
+  --glow-b: transparent;
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --bg: #12131b;
-  --bg-2: #181a24;
-  --card: #1c1e2a;
-  --card-2: #232636;
-  --ink: #eeebe6;
-  --soft: #b4b2bd;
-  --faint: #7c7b88;
-  --line: #2c2f40;
-  --indigo: #9aa4ff;
-  --indigo-ink: #12131b;
-  --sage: #8fc2ad;
-  --sage-ink: #bfe3d3;
-  --coral: #f0947d;
-  --coral-ink: #f6b9a8;
-  --sun: #f2cd7c;
-  --sun-ink: #f3d590;
-  --sky: #7f9fc4;
+  --bg: #111112;
+  --bg-2: #18181a;
+  --card: #18181a;
+  --card-2: #222225;
+  --ink: #ecebe7;
+  --soft: #a9a7a1;
+  --faint: #6f6d68;
+  --line: #2a2a2d;
+  --indigo: #a9b0ff;
+  --indigo-ink: #111112;
+  --sage: #8dbba6;
+  --sage-ink: #b9dccb;
+  --coral: #e99580;
+  --coral-ink: #f3b7a6;
+  --sun: #e2b65e;
+  --sun-ink: #f0d08e;
+  --sky: #7d9cbd;
   --urgent: #ff6b5e;
-  --shadow: 0 1px 0 rgba(0, 0, 0, 0.25), 0 16px 36px -20px rgba(0, 0, 0, 0.85);
-  --glow-a: rgba(154, 164, 255, 0.12);
-  --glow-b: rgba(143, 194, 173, 0.1);
+  --shadow: 0 0 0 0 transparent;
+  --glow-a: transparent;
+  --glow-b: transparent;
   color-scheme: dark;
 }
 
@@ -77,9 +79,12 @@
   --color-sky: var(--sky);
   --color-urgent: var(--urgent);
   --color-cream: var(--bg);
-  --font-nunito: "Nunito", system-ui, sans-serif;
-  --font-sans: "Nunito", system-ui, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-nunito: "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 0.875rem;
+  --radius-3xl: 1.125rem;
   --shadow-soft: var(--shadow);
 }
 
@@ -98,7 +103,9 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Nunito", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  letter-spacing: -0.006em;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -199,10 +206,12 @@ input[type="range"].mm-range::-moz-range-thumb {
   scrollbar-width: none;
 }
 
+/* the serif is the voice: one weight, never fake-bold */
 .font-display {
-  font-family: "Fraunces", Georgia, serif;
-  font-optical-sizing: auto;
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
   letter-spacing: -0.01em;
+  line-height: 1.08;
 }
 
 @media (prefers-reduced-motion: reduce) {

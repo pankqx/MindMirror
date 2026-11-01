@@ -1,9 +1,9 @@
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ChartIcon, ChatIcon, HeartIcon, HomeIcon, PlayIcon } from "./components/Icons";
+import { CalendarIcon, ChartIcon, ChatIcon, CheckIcon, GearIcon, HeartIcon, HomeIcon, PlayIcon, WindIcon } from "./components/Icons";
 import { LiveToasts } from "./components/LiveToasts";
 import { Settings } from "./components/Settings";
-import { TopBar } from "./components/TopBar";
+import { HubStatus, ThemeButton, TopBar, Wordmark } from "./components/TopBar";
 import { saveCheckIn } from "./lib/db";
 import { startSavingTurns, unlockAudio } from "./lib/hub";
 import { TITLES, type Go, type Screen } from "./lib/nav";
@@ -28,6 +28,23 @@ const TABS = [
   { id: "play", label: "Play", Icon: PlayIcon },
   { id: "support", label: "Support", Icon: HeartIcon },
 ] as const;
+
+const MORE = [
+  { id: "checkin", label: "Check in", Icon: CheckIcon },
+  { id: "breathe", label: "Breathe", Icon: WindIcon },
+  { id: "planner", label: "Planner", Icon: CalendarIcon },
+] as const;
+
+function RailLink({ active, onClick, Icon, label }: { active: boolean; onClick: () => void; Icon: typeof HomeIcon; label: string }) {
+  return (
+    <button onClick={onClick} aria-current={active ? "page" : undefined}
+      className={`relative flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[15px] transition-colors ${active ? "font-semibold text-ink" : "text-soft hover:bg-card-2 hover:text-ink"}`}>
+      {active && <motion.span layoutId="rail-mark" className="absolute inset-0 rounded-xl bg-card-2" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+      <Icon size={19} className="relative" />
+      <span className="relative">{label}</span>
+    </button>
+  );
+}
 
 const TAB_IDS: Screen[] = TABS.map((t) => t.id);
 
@@ -75,16 +92,40 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <AnimatePresence>{!prefs.welcomed && <Welcome key="welcome" />}</AnimatePresence>
 
-      <div className="mx-auto min-h-screen max-w-[520px] px-5 pb-32">
+      {/* laptop: a quiet side rail */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-line px-6 py-7 lg:flex">
+        <button onClick={() => go("home")} aria-label="Home" className="mb-10 text-left"><Wordmark /></button>
+        <nav className="space-y-0.5" aria-label="Main">
+          {TABS.map(({ id, label, Icon }) => (
+            <RailLink key={id} active={screen === id} onClick={() => go(id)} Icon={Icon} label={label} />
+          ))}
+        </nav>
+        <p className="mb-2 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">Tools</p>
+        <nav className="space-y-0.5" aria-label="Tools">
+          {MORE.map(({ id, label, Icon }) => (
+            <RailLink key={id} active={screen === id} onClick={() => go(id)} Icon={Icon} label={label} />
+          ))}
+        </nav>
+        <div className="mt-auto space-y-1 border-t border-line pt-4">
+          <HubStatus go={go} wide />
+          <div className="flex items-center gap-1">
+            <ThemeButton />
+            <button onClick={() => setSettings(true)} aria-label="Settings"
+              className="grid h-9 w-9 place-items-center rounded-full text-soft hover:bg-card-2 hover:text-ink"><GearIcon size={18} /></button>
+          </div>
+        </div>
+      </aside>
+
+      <div className="mx-auto min-h-screen max-w-[520px] px-5 pb-32 lg:ml-[248px] lg:max-w-[1040px] lg:px-14 lg:pb-20">
         <TopBar screen={screen} onBack={isTab ? undefined : back} onSettings={() => setSettings(true)} go={go} />
 
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             key={screen}
-            initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
             {screen === "home" && <Home go={go} />}
             {screen === "insights" && <Insights go={go} />}
@@ -105,27 +146,23 @@ export default function App() {
 
       <LiveToasts go={go} screen={screen} />
 
-      {/* bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 pb-[max(env(safe-area-inset-bottom),12px)]" aria-label="Main">
-        <div className="mx-auto max-w-[520px] px-4">
-          <div className="grid grid-cols-5 rounded-[1.75rem] border border-line/80 bg-card/80 p-1.5 shadow-soft backdrop-blur-xl">
-            {TABS.map(({ id, label, Icon }) => {
-              const active = screen === id;
-              return (
-                <button key={id} onClick={() => go(id)} aria-current={active ? "page" : undefined}
-                  className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-3xl text-[11px] font-bold transition-colors ${active ? "text-indigo" : "text-faint hover:text-soft"}`}>
-                  {active && (
-                    <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-3xl bg-indigo/12"
-                      transition={{ type: "spring", stiffness: 420, damping: 34 }} />
-                  )}
-                  <motion.span className="relative" animate={{ y: active ? -1 : 0, scale: active ? 1.08 : 1 }}>
-                    <Icon size={22} />
-                  </motion.span>
-                  <span className="relative">{label}</span>
-                </button>
-              );
-            })}
-          </div>
+      {/* phone: a flat tab bar on a hairline */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/90 pb-[max(env(safe-area-inset-bottom),6px)] backdrop-blur-xl lg:hidden" aria-label="Main">
+        <div className="mx-auto grid max-w-[520px] grid-cols-5 px-2">
+          {TABS.map(({ id, label, Icon }) => {
+            const active = screen === id;
+            return (
+              <button key={id} onClick={() => go(id)} aria-current={active ? "page" : undefined}
+                className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors ${active ? "text-ink" : "text-faint"}`}>
+                {active && (
+                  <motion.span layoutId="tab-mark" className="absolute top-0 h-[2px] w-8 rounded-full bg-indigo"
+                    transition={{ type: "spring", stiffness: 500, damping: 38 }} />
+                )}
+                <Icon size={22} strokeWidth={active ? 1.9 : 1.6} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </div>
       </nav>
 
