@@ -16,7 +16,9 @@ function hubUrl() {
   } catch {
     /* storage blocked */
   }
-  return `http://${location.hostname || "localhost"}:8787`;
+  // On GitHub Pages the hub can only be this laptop's own one.
+  const host = !location.hostname || location.hostname.endsWith("github.io") ? "localhost" : location.hostname;
+  return `http://${host}:8787`;
 }
 
 export const HUB = hubUrl();
