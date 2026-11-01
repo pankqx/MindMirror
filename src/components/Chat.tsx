@@ -1,199 +1,169 @@
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { MicIcon, NecklaceIcon, SendIcon } from "./Icons";
+import { Dots, Wave } from "./LiveToasts";
+import { spring } from "./ui";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+// Kishore's chat: messages, a text box and Hold to talk.
+// Now with message bubbles that float in, a typing indicator, and a live mic ring.
 
 export type Message = {
   from: "me" | "mindmirror";
   text: string;
   via?: "necklace" | "web";
+  note?: string;
 };
+
+export type HoldState = "idle" | "listening" | "thinking" | "speaking";
 
 type ChatProps = {
   messages: Message[];
   onSend: (text: string) => void;
   onHoldStart: () => void;
   onHoldEnd: () => void;
+  typing?: boolean;
+  hold?: HoldState;
+  /** 0..1 mic level while listening. */
+  level?: () => number;
+  suggestions?: string[];
 };
 
-export default function Chat({
-  messages,
-  onSend,
-  onHoldStart,
-  onHoldEnd,
-}: ChatProps) {
+function MicRing({ level, active }: { level?: () => number; active: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!active || !level) return;
+    let raf = 0;
+    const tick = () => {
+      const l = level();
+      if (ref.current) ref.current.style.transform = `scale(${1 + l * 0.9})`;
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [active, level]);
+  return <span ref={ref} className="absolute inset-0 rounded-full bg-coral/30 transition-transform duration-75" />;
+}
 
+export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing, hold = "idle", level, suggestions = [] }: ChatProps) {
   const [input, setInput] = useState("");
-  const [holding, setHolding] = useState(false);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const holding = useRef(false);
+  const endRef = useRef<HTMLDivElement>(null);
 
   // Automatically scroll to latest message
-
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, [messages]);
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length, typing]);
 
-  // Send text message
-
-  function handleSend() {
-    const text = input.trim();
-
-    if (!text) return;
-
-    onSend(text);
-
+  function handleSend(text = input) {
+    const t = text.trim();
+    if (!t) return;
+    onSend(t);
     setInput("");
   }
 
-  // Start voice recording
-
-  function handleHoldStart() {
-    if (holding) return;
-
-    setHolding(true);
+  function down(e: React.PointerEvent) {
+    if (holding.current || hold === "thinking") return;
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    holding.current = true;
     onHoldStart();
   }
-
-  // Stop voice recording
-
-  function handleHoldEnd() {
-    if (!holding) return;
-
-    setHolding(false);
+  function up() {
+    if (!holding.current) return;
+    holding.current = false;
     onHoldEnd();
   }
 
+  const label = {
+    idle: "Hold to talk",
+    listening: "Listening… let go when you're done",
+    thinking: "Thinking",
+    speaking: "Speaking on this laptop",
+  }[hold];
+
   return (
-    <div className="bg-cream rounded-2xl p-4 flex flex-col h-[550px]">
-
-      {/* HEADER */}
-
-      <div className="border-b border-gray-200 pb-3 mb-4">
-
-        <h2 className="font-extrabold text-lg text-ink">
-          MindMirror
-        </h2>
-
-        <p className="text-xs text-gray-500">
-          Your companion
-        </p>
-
-      </div>
-
+    <div className="flex flex-col">
       {/* MESSAGES */}
+      <div className="min-h-[38vh] space-y-3 pb-4">
+        {messages.length === 0 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="py-6 text-center">
+            <p className="font-display text-2xl font-semibold">What's on your mind?</p>
+            <p className="mt-2 text-sm text-soft">I listen, reflect, and suggest one small step. I never diagnose.</p>
+          </motion.div>
+        )}
 
-      <div className="flex-1 overflow-y-auto space-y-4">
-
-        {messages.map((message, index) => (
-
-          <div
-            key={index}
-            className={`flex ${
-              message.from === "me"
-                ? "justify-end"
-                : "justify-start"
-            }`}
-          >
-
-            <div className="max-w-[85%]">
-
-              {message.from === "mindmirror" && (
-                <div className="text-xs text-gray-500 mb-1">
-                  🌿 MindMirror
+        <AnimatePresence initial={false}>
+          {messages.map((m, i) => (
+            <motion.div key={i} layout initial={{ opacity: 0, y: 14, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={spring}
+              className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}
+              style={{ transformOrigin: m.from === "me" ? "bottom right" : "bottom left" }}>
+              <div className="max-w-[85%]">
+                <div className={`rounded-3xl px-4 py-3 text-[15px] leading-relaxed ${m.from === "me"
+                  ? "rounded-br-lg bg-indigo text-indigo-ink"
+                  : "rounded-bl-lg border border-line/70 bg-card text-ink shadow-soft"}`}>
+                  {m.text}
                 </div>
-              )}
-
-              <div
-                className={`p-3 rounded-2xl text-sm ${
-                  message.from === "me"
-                    ? "bg-indigo text-white rounded-br-sm"
-                    : "bg-white text-ink rounded-bl-sm shadow-sm"
-                }`}
-              >
-                {message.text}
+                {(m.via === "necklace" || m.note) && (
+                  <div className={`mt-1 flex items-center gap-1 text-xs text-faint ${m.from === "me" ? "justify-end" : ""}`}>
+                    {m.via === "necklace" && <><NecklaceIcon size={12} /> from necklace</>}
+                    {m.note}
+                  </div>
+                )}
               </div>
-
-              {message.via === "necklace" && (
-                <div className="text-xs text-gray-500 mt-1">
-                  🎙 from necklace
-                </div>
-              )}
-
-            </div>
-
-          </div>
-
-        ))}
-
-        <div ref={messagesEndRef} />
-
+            </motion.div>
+          ))}
+          {typing && (
+            <motion.div key="typing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex">
+              <div className="rounded-3xl rounded-bl-lg border border-line/70 bg-card px-4 py-4 text-faint shadow-soft"><Dots /></div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <div ref={endRef} className="h-1" />
       </div>
+
+      {/* SUGGESTIONS */}
+      {suggestions.length > 0 && (
+        <div className="no-scrollbar -mx-5 mb-3 flex gap-2 overflow-x-auto px-5">
+          {suggestions.map((s) => (
+            <motion.button key={s} whileTap={{ scale: 0.95 }} onClick={() => handleSend(s)}
+              className="shrink-0 rounded-full border border-line bg-card px-4 py-2 text-sm font-semibold text-soft">
+              {s}
+            </motion.button>
+          ))}
+        </div>
+      )}
 
       {/* INPUT AREA */}
-
-      <div className="border-t border-gray-200 pt-3 mt-3">
-
-        <div className="flex gap-2">
-
-          <input
-            type="text"
-            value={input}
-            onChange={(e) =>
-              setInput(e.target.value)
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSend();
-              }
-            }}
-            placeholder="Share your thoughts..."
-            className="flex-1 min-w-0 p-3 rounded-xl bg-white border border-gray-200 outline-none focus:border-indigo"
-          />
-
-          <button
-            onClick={handleSend}
-            className="bg-indigo text-white px-4 rounded-xl font-bold"
-          >
-            Send
-          </button>
-
+      <div className="sticky bottom-28 z-10 rounded-[1.75rem] border border-line/80 bg-card/90 p-2 shadow-soft backdrop-blur-xl">
+        <div className="flex items-center gap-2">
+          <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
+            placeholder="Share your thoughts…" aria-label="Message"
+            className="min-h-12 min-w-0 flex-1 rounded-2xl bg-transparent px-3 outline-none" />
+          <AnimatePresence>
+            {input.trim() && (
+              <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={spring}
+                onClick={() => handleSend()} aria-label="Send" className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo text-indigo-ink">
+                <SendIcon size={20} />
+              </motion.button>
+            )}
+          </AnimatePresence>
+          {/* HOLD TO TALK */}
+          <motion.button type="button" onPointerDown={down} onPointerUp={up} onPointerCancel={up} onContextMenu={(e) => e.preventDefault()}
+            animate={{ scale: hold === "listening" ? 1.12 : 1 }} transition={spring} aria-label="Hold to talk"
+            className={`relative grid h-12 w-12 shrink-0 touch-none select-none place-items-center rounded-2xl text-white ${hold === "listening" ? "bg-coral" : "bg-ink/90"}`}>
+            <MicRing level={level} active={hold === "listening"} />
+            <span className="relative text-bg">
+              {hold === "speaking" ? <Wave bars={4} /> : hold === "thinking" ? <Dots /> : <MicIcon size={21} />}
+            </span>
+          </motion.button>
         </div>
-
-        {/* HOLD TO TALK */}
-
-        <div className="flex justify-center mt-4">
-
-          <button
-            type="button"
-            onPointerDown={handleHoldStart}
-            onPointerUp={handleHoldEnd}
-            onPointerLeave={handleHoldEnd}
-            onPointerCancel={handleHoldEnd}
-            className={`w-16 h-16 rounded-full text-2xl text-white transition ${
-              holding
-                ? "bg-coral scale-110 animate-pulse"
-                : "bg-indigo"
-            }`}
-            aria-label="Hold to talk"
-          >
-            🎙
-          </button>
-
-        </div>
-
-        <p className="text-center text-xs text-gray-500 mt-2">
-          {holding
-            ? "Listening..."
-            : "Hold to talk"}
-        </p>
-
+        <AnimatePresence mode="wait">
+          <motion.p key={label} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            className="px-3 pb-1 pt-1.5 text-center text-xs font-semibold text-faint">
+            {label}
+          </motion.p>
+        </AnimatePresence>
       </div>
-
     </div>
   );
 }

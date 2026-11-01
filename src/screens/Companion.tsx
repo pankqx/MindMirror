@@ -1,45 +1,55 @@
 import { useLiveQuery } from "dexie-react-hooks";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import Chat, { type HoldState, type Message } from "../components/Chat";
+import { NecklaceIcon } from "../components/Icons";
 import { db } from "../lib/db";
-import { chat, startTalk } from "../lib/hub";
+import { chat, startTalk, useHubOnline, useSpeaking, useThinking, type Talk } from "../lib/hub";
 import { contextFor } from "../lib/signals";
 import { isCrisis } from "../lib/support";
 import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
 
-interface Msg { from: "me" | "mindmirror"; text: string; via?: "necklace" | "web"; at: string }
+interface Msg extends Message { at: string }
 
-// Temporary bubbles; swap for Kishore's Chat component when it lands.
+const SUGGESTIONS = ["I slept only four hours", "Too many deadlines this week", "I feel a bit alone", "I don't feel like going to class"];
+
+/** If the hub is off, still answer kindly (and say so). Code picks the step; nothing is diagnosed. */
+function offlineReply(t: string): string {
+  const s = t.toLowerCase();
+  if (/sleep|slept|tired|awake|night/.test(s)) return "Short nights add up. Could tonight be 30 minutes earlier, with the phone in another corner of the room?";
+  if (/deadline|exam|assignment|record|study|pressure|marks/.test(s)) return "That's a lot at once. Pick just the one task due first, and give it 25 focused minutes. That's enough for now.";
+  if (/alone|lonely|nobody|friend|isolat/.test(s)) return "Feeling alone is heavy. Is there one person you could message today, even just a hello?";
+  if (/class|motivat|bother|pointless|lazy/.test(s)) return "It's okay to feel flat. What's one small thing that would make today a little easier?";
+  return "Thank you for telling me. What's one small thing that would help you feel a bit lighter right now?";
+}
+
 export default function Companion() {
   const ins = useInsights();
+  const online = useHubOnline();
+  const thinking = useThinking();
+  const speaking = useSpeaking();
   const voice = useLiveQuery(() => db.voice.orderBy("at").toArray(), []);
   const [typed, setTyped] = useState<Msg[]>([]);
-  const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hold, setHold] = useState<HoldState>("idle");
   const [crisis, setCrisis] = useState(false);
   const [error, setError] = useState("");
-  const stopRef = useRef<null | (() => Promise<void>)>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+  const talkRef = useRef<Talk | null>(null);
+  const [level, setLevel] = useState<(() => number) | undefined>(undefined);
 
   const msgs: Msg[] = [
     ...(voice ?? []).flatMap((v): Msg[] => [
       { from: "me", text: v.heard, via: v.source, at: v.at },
-      { from: "mindmirror", text: v.reply, via: v.source, at: v.at + "z" },
+      { from: "mindmirror", text: v.reply, via: v.source === "necklace" ? undefined : v.source, at: v.at + "z" },
     ]),
     ...typed,
   ].sort((a, b) => a.at.localeCompare(b.at));
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs.length]);
-
-  async function send() {
-    const t = text.trim();
-    if (!t || busy) return;
-    setText("");
+  async function send(t: string) {
+    if (busy) return;
     setError("");
-    const now = new Date().toISOString();
-    setTyped((m) => [...m, { from: "me", text: t, at: now }]);
+    setTyped((m) => [...m, { from: "me", text: t, at: new Date().toISOString() }]);
     if (isCrisis(t)) setCrisis(true);
     setBusy(true);
     try {
@@ -47,7 +57,8 @@ export default function Companion() {
       if (r.crisis) setCrisis(true);
       setTyped((m) => [...m, { from: "mindmirror", text: r.reply, at: new Date().toISOString() }]);
     } catch {
-      setError("Can't reach the hub. Is it running on this laptop?");
+      await new Promise((r) => setTimeout(r, 700));
+      setTyped((m) => [...m, { from: "mindmirror", text: offlineReply(t), note: "offline reply (hub not running)", at: new Date().toISOString() }]);
     } finally {
       setBusy(false);
     }
@@ -56,54 +67,99 @@ export default function Companion() {
   async function holdStart() {
     setError("");
     try {
-      stopRef.current = await startTalk();
+      const talk = await startTalk();
+      talkRef.current = talk;
+      setLevel(() => talk.level);
+      setHold("listening");
     } catch {
-      setError("Microphone not available.");
+      setError("Microphone not available. Allow the mic for this page, or type instead.");
     }
   }
 
   async function holdEnd() {
-    const stop = stopRef.current;
-    stopRef.current = null;
-    if (!stop) return;
-    setBusy(true);
+    const talk = talkRef.current;
+    talkRef.current = null;
+    if (!talk) return;
+    setHold("thinking");
     try {
-      await stop(); // the turn arrives through /events and is saved by App
-    } catch {
-      setError("Can't reach the hub. Is it running on this laptop?");
-    } finally {
-      setBusy(false);
+      await talk.stop(); // the turn arrives through /events and is saved by App; the reply plays here
+      setHold("idle");
+    } catch (e) {
+      setHold("idle");
+      setError((e as Error).message === "too short"
+        ? "Hold the button a little longer while you speak."
+        : "Can't reach the hub. Start it on this laptop (cd hub, npm start), or type instead.");
     }
   }
 
+  // On a laptop, hold the Space bar to talk (when you're not typing).
+  const keys = useRef({ holdStart, holdEnd });
+  keys.current = { holdStart, holdEnd };
+  useEffect(() => {
+    const typing = (e: KeyboardEvent) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+    const down = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat || typing(e)) return;
+      e.preventDefault();
+      void keys.current.holdStart();
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || typing(e)) return;
+      e.preventDefault();
+      void keys.current.holdEnd();
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
+
+  const state: HoldState = hold !== "idle" ? hold : speaking ? "speaking" : "idle";
+
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-3">
+    <div className="space-y-4">
       {(crisis || ins?.crisis) && <UrgentHelp />}
-      <div className="flex-1 space-y-2 overflow-y-auto">
-        {msgs.length === 0 && <p className="text-center text-sm opacity-60">Say anything. I'm listening.</p>}
-        {msgs.map((m, i) => (
-          <div key={i} className={m.from === "me" ? "text-right" : "text-left"}>
-            {m.via === "necklace" && m.from === "me" && <p className="text-xs opacity-60">{"\u{1F399}"} from necklace</p>}
-            <span className={`inline-block max-w-[85%] rounded-2xl px-4 py-2 text-left ${
-              m.from === "me" ? "bg-[#4F5BD5] text-white" : "bg-white shadow-sm"}`}>
-              {m.from === "mindmirror" && "\u{1F33F} "}{m.text}
-            </span>
-          </div>
-        ))}
-        {busy && <p className="text-sm opacity-60">{"\u{1F33F}"} thinking…</p>}
-        <div ref={endRef} />
+
+      {/* companion presence */}
+      <div className="flex items-center gap-4 rounded-3xl border border-line/70 bg-card p-4 shadow-soft">
+        <div className="relative grid h-14 w-14 shrink-0 place-items-center">
+          <motion.span className="absolute inset-0 rounded-full bg-gradient-to-br from-sage to-indigo"
+            animate={{ scale: state === "speaking" ? [1, 1.12, 1] : thinking || state === "thinking" ? [1, 0.9, 1] : [1, 1.04, 1] }}
+            transition={{ duration: state === "speaking" ? 0.6 : 4, repeat: Infinity, ease: "easeInOut" }} />
+          <span className="relative text-2xl">🌿</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">MindMirror</p>
+          <AnimatePresence mode="wait">
+            <motion.p key={`${online}-${thinking}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-soft">
+              {thinking === "necklace" ? (
+                <span className="flex items-center gap-1.5 text-indigo"><NecklaceIcon size={14} /> Your necklace is talking to me…</span>
+              ) : online ? "Here with you. Type, hold the mic (or Space), or use your necklace."
+                : online === false ? "Hub is off. I can still listen, with simple offline replies." : "Connecting…"}
+            </motion.p>
+          </AnimatePresence>
+        </div>
       </div>
-      {error && <p className="text-sm text-[#E8836B]">{error}</p>}
-      <div className="flex gap-2">
-        <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Type how you feel…" className="flex-1 rounded-full bg-white px-4 py-3 shadow-sm outline-none" />
-        <button onClick={send} disabled={busy} className="rounded-full bg-[#4F5BD5] px-5 text-white min-h-11">Send</button>
-      </div>
-      <button
-        onPointerDown={holdStart} onPointerUp={holdEnd} onPointerLeave={holdEnd}
-        className="mx-auto h-20 w-20 rounded-full bg-[#8FB9A8] text-white shadow-md active:scale-110 select-none">
-        {"\u{1F399}"}<br /><span className="text-xs">Hold to talk</span>
-      </button>
+
+      <Chat
+        messages={msgs}
+        onSend={(t) => void send(t)}
+        onHoldStart={() => void holdStart()}
+        onHoldEnd={() => void holdEnd()}
+        typing={busy || thinking !== null}
+        hold={state}
+        level={level}
+        suggestions={msgs.length === 0 ? SUGGESTIONS : []}
+      />
+
+      <AnimatePresence>
+        {error && (
+          <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center text-sm font-semibold text-coral-ink">
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

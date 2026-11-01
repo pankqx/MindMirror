@@ -4,7 +4,9 @@
 //                  -> transcribe (Groq Whisper) -> companion reply (Groq LLM) -> speech (Edge TTS)
 //                  -> audio out (necklace: raw 16 kHz PCM, web: mp3)
 //   POST /chat     {"text": "..."} -> {"reply", "mood", "signals"} for the app's chat screen
-//   GET  /events   Server-Sent Events: every voice turn, so the app can log it
+//   GET  /events   Server-Sent Events: "thinking" when audio arrives, then every voice turn
+//   GET  /audio/:id   the reply mp3 of a recent turn (the app plays necklace replies on the laptop)
+//   GET  /speak?text=...   any text as Edge TTS mp3 (laptop speaker fallback)
 //   GET  /health   quick check
 //
 // It also shouts "MINDMIRROR_HUB <port>" on UDP broadcast every 2 s so the necklace finds
@@ -155,6 +157,16 @@ function broadcast(event) {
   for (const res of listeners) res.write(line);
 }
 
+// Recent reply audio, so the web app can play a necklace reply on the laptop speaker.
+const recentAudio = new Map();
+let audioId = 0;
+function keepAudio(mp3) {
+  const id = String(++audioId);
+  recentAudio.set(id, mp3);
+  if (recentAudio.size > 10) recentAudio.delete(recentAudio.keys().next().value);
+  return `/audio/${id}`;
+}
+
 // ---------- HTTP ----------
 
 function readBody(req) {
@@ -186,6 +198,7 @@ async function handleTalk(req, res, url) {
     audio = body; name = type.includes("wav") ? "speech.wav" : "speech.webm"; mime = type || "audio/webm";
   }
 
+  broadcast({ type: "thinking", source: fromNecklace ? "necklace" : "web" });
   const heard = await transcribe(audio, name, mime);
   const t1 = Date.now();
   const out = heard ? await companion(heard) : { reply: "I couldn't hear that. Hold the button and try again?", mood: "okay", signals: [] };
@@ -193,7 +206,10 @@ async function handleTalk(req, res, url) {
   const mp3 = await speakMp3(out.reply);
   const t3 = Date.now();
 
-  broadcast({ type: "turn", at: new Date().toISOString(), source: fromNecklace ? "necklace" : "web", heard, ...out });
+  broadcast({
+    type: "turn", at: new Date().toISOString(), source: fromNecklace ? "necklace" : "web", heard, ...out,
+    audio: keepAudio(mp3),
+  });
   console.log(`[talk] ${(body.length / 32000).toFixed(1)}s audio | stt ${t1 - t0}ms, ai ${t2 - t1}ms, tts ${t3 - t2}ms`);
   console.log(`  heard: ${heard}\n  reply: ${out.reply}`);
 
@@ -235,9 +251,19 @@ export const server = http.createServer(async (req, res) => {
       return send(res, 200, await companion(String(text), String(context)));
     }
     if (req.method === "POST" && url.pathname === "/talk") return await handleTalk(req, res, url);
+    if (req.method === "GET" && url.pathname.startsWith("/audio/")) {
+      const mp3 = recentAudio.get(url.pathname.slice(7));
+      return mp3 ? send(res, 200, mp3, "audio/mpeg") : send(res, 404, { error: "gone" });
+    }
+    if (req.method === "GET" && url.pathname === "/speak") {
+      const text = String(url.searchParams.get("text") || "").slice(0, 400);
+      if (!text) return send(res, 400, { error: "no text" });
+      return send(res, 200, await speakMp3(text), "audio/mpeg");
+    }
     send(res, 404, { error: "not found" });
   } catch (e) {
     console.error("[error]", e.message);
+    broadcast({ type: "idle" });
     // The necklace treats any non-200 as "play the sad beep"
     send(res, e.short ? 422 : 500, { error: e.message });
   }

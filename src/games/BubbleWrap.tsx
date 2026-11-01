@@ -1,113 +1,123 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { buzz, chime, pop } from "./sound";
+
+// Merel's bubble wrap. Each pop flattens the bubble, sends out a tiny ring and a few
+// droplets, and makes a soft sound. Drag across the sheet to pop many at once.
+
+const COUNT = 48;
+
+function Bubble({ popped, onPop, index }: { popped: boolean; onPop: () => void; index: number }) {
+  return (
+    <motion.button
+      type="button"
+      aria-label={`Bubble ${index + 1}${popped ? " popped" : ""}`}
+      data-i={index}
+      onPointerDown={(e) => {
+        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId); // so dragging can pop the next ones
+        onPop();
+      }}
+      disabled={popped}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: popped ? 0.86 : 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 500, damping: 18, delay: popped ? 0 : (index % 8) * 0.015 + Math.floor(index / 8) * 0.03 }}
+      whileHover={popped ? undefined : { scale: 1.08 }}
+      className="relative aspect-square touch-none rounded-full"
+    >
+      {/* the bubble */}
+      <span
+        className={`absolute inset-0 rounded-full transition-all duration-200 ${popped
+          ? "bg-sage/30 shadow-none"
+          : "bg-gradient-to-br from-white/90 to-sage/50 shadow-[inset_-3px_-4px_8px_rgba(0,0,0,0.08),0_3px_8px_-3px_rgba(0,0,0,0.2)]"}`}
+      />
+      {!popped && <span className="absolute left-[22%] top-[18%] h-[22%] w-[22%] rounded-full bg-white/90" />}
+      {popped && <span className="absolute inset-[30%] rounded-full border border-sage-ink/20" />}
+
+      {/* the burst */}
+      <AnimatePresence>
+        {popped && (
+          <>
+            <motion.span key="ring" className="pointer-events-none absolute inset-0 rounded-full border-2 border-white"
+              initial={{ scale: 0.6, opacity: 0.9 }} animate={{ scale: 1.9, opacity: 0 }} transition={{ duration: 0.5 }} />
+            {[0, 1, 2, 3, 4].map((i) => {
+              const a = (i / 5) * Math.PI * 2 + index;
+              return (
+                <motion.span key={i} className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-white"
+                  initial={{ x: 0, y: 0, opacity: 1 }} animate={{ x: Math.cos(a) * 26, y: Math.sin(a) * 26, opacity: 0, scale: 0.4 }}
+                  transition={{ duration: 0.55, ease: "easeOut" }} />
+              );
+            })}
+          </>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
+}
 
 export default function BubbleWrap() {
-  const [popped, setPopped] = useState<boolean[]>(
-    Array(48).fill(false)
-  );
+  const [popped, setPopped] = useState<boolean[]>(Array(COUNT).fill(false));
+  const [sheet, setSheet] = useState(0);
+  const count = popped.filter(Boolean).length;
+  const allPopped = count === COUNT;
 
-  const playPop = () => {
-    try {
-      const AudioContextClass =
-        window.AudioContext ||
-        (window as typeof window & {
-          webkitAudioContext?: typeof AudioContext;
-        }).webkitAudioContext;
-
-      if (!AudioContextClass) return;
-
-      const audio = new AudioContextClass();
-      const buffer = audio.createBuffer(
-        1,
-        audio.sampleRate * 0.04,
-        audio.sampleRate
-      );
-
-      const data = buffer.getChannelData(0);
-
-      for (let i = 0; i < data.length; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-
-      const source = audio.createBufferSource();
-      const filter = audio.createBiquadFilter();
-      const volume = audio.createGain();
-
-      source.buffer = buffer;
-      filter.type = "lowpass";
-      filter.frequency.value = 1000;
-
-      volume.gain.setValueAtTime(0.15, audio.currentTime);
-      volume.gain.exponentialRampToValueAtTime(
-        0.001,
-        audio.currentTime + 0.04
-      );
-
-      source.connect(filter);
-      filter.connect(volume);
-      volume.connect(audio.destination);
-
-      source.start();
-      source.stop(audio.currentTime + 0.04);
-      source.onended = () => audio.close();
-    } catch {
-      // The game still works if sound is unavailable.
-    }
-  };
+  const done = useRef<Set<number>>(new Set());
 
   const popBubble = (index: number) => {
-    if (popped[index]) return;
-
-    playPop();
-
-    setPopped((previous) =>
-      previous.map((value, i) => (i === index ? true : value))
-    );
+    if (done.current.has(index)) return;
+    done.current.add(index);
+    pop();
+    buzz(8);
+    setPopped((prev) => {
+      const next = prev.map((v, i) => (i === index ? true : v));
+      if (next.every(Boolean)) window.setTimeout(() => chime(2), 150);
+      return next;
+    });
   };
 
   const resetGame = () => {
-    setPopped(Array(48).fill(false));
+    done.current = new Set();
+    setPopped(Array(COUNT).fill(false));
+    setSheet((s) => s + 1);
   };
 
-  const allPopped = popped.every(Boolean);
-
   return (
-    <div className="w-full rounded-3xl bg-[#8FB9A8] p-5 text-center shadow-sm">
-      <p className="mb-5 text-sm text-[#263D35]">
-        Pop slowly. Breathe out with each one.
-      </p>
+    <div className="w-full overflow-hidden rounded-[2rem] bg-sage/35 p-5 text-center shadow-soft">
+      <div className="mb-4 flex items-center justify-between text-sm">
+        <p className="text-sage-ink">Pop slowly. Breathe out with each one.</p>
+        <motion.span key={count} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="rounded-full bg-card/70 px-3 py-1 font-bold tabular-nums text-sage-ink">
+          {count}/{COUNT}
+        </motion.span>
+      </div>
 
-      <div className="grid grid-cols-8 gap-2">
+      <div key={sheet}
+        onPointerMove={(e) => {
+          if (e.pointerType === "mouse" && e.buttons !== 1) return;
+          const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>("[data-i]");
+          if (el) popBubble(Number(el.dataset.i));
+        }}
+        className="grid touch-none select-none grid-cols-8 gap-2 rounded-3xl bg-card/40 p-3">
         {popped.map((isPopped, index) => (
-          <motion.button
-            key={index}
-            type="button"
-            aria-label={`Bubble ${index + 1}${isPopped ? " popped" : ""}`}
-            onClick={() => popBubble(index)}
-            disabled={isPopped}
-            whileTap={!isPopped ? { scale: 0.75 } : {}}
-            className={`aspect-square min-h-10 rounded-full border-2 border-white/70 shadow-inner transition-colors ${
-              isPopped
-                ? "bg-[#6F9D8B] shadow-none"
-                : "bg-[#D9EEE4] hover:bg-white"
-            }`}
-          />
+          <Bubble key={index} index={index} popped={isPopped} onPop={() => popBubble(index)} />
         ))}
       </div>
 
-      {allPopped && (
-        <p className="mt-5 font-semibold text-[#263D35]">
-          All popped. Lighter?
-        </p>
-      )}
+      <AnimatePresence mode="wait">
+        {allPopped ? (
+          <motion.p key="done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="mt-5 font-display text-xl font-semibold text-sage-ink">
+            All popped. Lighter?
+          </motion.p>
+        ) : (
+          <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-5 text-xs text-sage-ink/80">
+            Tip: press and drag across the sheet.
+          </motion.p>
+        )}
+      </AnimatePresence>
 
-      <button
-        type="button"
-        onClick={resetGame}
-        className="mt-5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#385B4D] hover:bg-[#F5F5F5]"
-      >
+      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={resetGame}
+        className="mt-4 rounded-full bg-card px-5 py-3 text-sm font-semibold text-sage-ink shadow-soft">
         {allPopped ? "Wrap a new sheet" : "Reset"}
-      </button>
+      </motion.button>
     </div>
   );
 }
