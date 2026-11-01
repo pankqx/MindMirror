@@ -1,59 +1,145 @@
-import { useEffect, useState } from "react";
-import { startSavingTurns } from "./lib/hub";
-import Companion from "./screens/Companion";
-import Home from "./screens/Home";
-import Insights from "./screens/Insights";
-import QuickCheckIn from "./screens/QuickCheckIn";
 
-export type Screen = "home" | "checkin" | "insights" | "companion" | "support" | "play" | "breathe" | "planner";
-export type Go = (s: Screen) => void;
+import { useState } from "react";
 
-const TITLES: Record<Screen, string> = {
-  home: "MindMirror", checkin: "Check in", insights: "Insights", companion: "Companion",
-  support: "Support", play: "Play room", breathe: "Breathe", planner: "Planner",
-};
+import CheckIn from "./screens/CheckIn";
+import Breathe from "./screens/Breathe";
 
-// Screens a teammate is building. Swap the placeholder for their import when the PR is merged.
-const COMING: Partial<Record<Screen, string>> = {
-  support: "Merel is building the Support screen.",
-  play: "Merel is building the Play room.",
-  breathe: "Kishore is building the Breathe screen.",
-  planner: "Planner comes later today.",
-};
+import Weather from "./components/Weather";
+import SignalCard from "./components/SignalCard";
+import Chat from "./components/Chat";
 
-function screenFromHash(): Screen {
-  const s = location.hash.replace("#/", "") as Screen;
-  return s in TITLES ? s : "home";
-}
+import type { Message } from "./components/Chat";
+
+type Page =
+  | "home"
+  | "checkin"
+  | "breathe"
+  | "chat";
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>(screenFromHash);
-  const go: Go = (s) => { location.hash = `#/${s}`; };
 
-  useEffect(() => {
-    const onHash = () => setScreen(screenFromHash());
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
+  const [page, setPage] = useState<Page>("home");
 
-  // Save every necklace / browser voice turn as it happens.
-  useEffect(() => startSavingTurns(), []);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      from: "mindmirror",
+      text: "Hello! How are you feeling today?",
+    },
+  ]);
+
+  function handleCheckIn(data: {
+    mood: number;
+    stress: number;
+    energy: number;
+    sleepHours: number;
+    connected: boolean;
+    note: string;
+  }) {
+    console.log("Check-in data:", data);
+    setPage("home");
+  }
+
+  function handleSend(text: string) {
+
+    setMessages((previous) => [
+      ...previous,
+      {
+        from: "me",
+        text,
+        via: "web",
+      },
+    ]);
+
+    // AI response integration will be added later.
+  }
+
+  if (page === "checkin") {
+    return (
+      <CheckIn onSave={handleCheckIn} />
+    );
+  }
+
+  if (page === "breathe") {
+    return <Breathe />;
+  }
+
+  if (page === "chat") {
+    return (
+      <div className="max-w-[480px] mx-auto p-4">
+        <Chat
+          messages={messages}
+          onSend={handleSend}
+          onHoldStart={() => console.log("Voice started")}
+          onHoldEnd={() => console.log("Voice stopped")}
+        />
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-[#FBF7F0] text-[#2B2D42]">
-      <div className="mx-auto max-w-[480px] p-5">
-        {screen !== "home" && (
-          <header className="mb-4 flex items-center gap-3">
-            <button onClick={() => go("home")} aria-label="Back" className="text-2xl min-h-11 min-w-11">&larr;</button>
-            <h1 className="text-xl font-bold">{TITLES[screen]}</h1>
-          </header>
-        )}
-        {screen === "home" && <Home go={go} />}
-        {screen === "checkin" && <QuickCheckIn onDone={() => go("insights")} />}
-        {screen === "insights" && <Insights />}
-        {screen === "companion" && <Companion />}
-        {COMING[screen] && <p className="rounded-2xl bg-white p-6 text-center shadow-sm">{COMING[screen]}</p>}
+    <main className="min-h-screen bg-cream p-5">
+
+      <div className="max-w-[480px] mx-auto space-y-5">
+
+        <h1 className="text-3xl font-extrabold text-ink">
+          Good morning 🌿
+        </h1>
+
+        <p className="text-gray-500">
+          Take a moment to check in with yourself.
+        </p>
+
+        <Weather
+          kind="clouds"
+          title="Passing clouds"
+          message="A little time for yourself can make a difference."
+        />
+
+        <h2 className="font-bold text-xl">
+          Your signals
+        </h2>
+
+        <SignalCard
+          name="Sleep"
+          icon="🌙"
+          level="watch"
+          proof="Your recent sleep average is 5.4 hours."
+        />
+
+        <SignalCard
+          name="Energy"
+          icon="⚡"
+          level="steady"
+          proof="Your energy is consistent."
+        />
+
+        <div className="grid grid-cols-2 gap-3">
+
+          <button
+            onClick={() => setPage("checkin")}
+            className="bg-indigo text-white rounded-2xl p-4 font-bold"
+          >
+            Daily check-in
+          </button>
+
+          <button
+            onClick={() => setPage("breathe")}
+            className="bg-sage text-ink rounded-2xl p-4 font-bold"
+          >
+            Breathe
+          </button>
+
+        </div>
+
+        <button
+          onClick={() => setPage("chat")}
+          className="w-full bg-white text-indigo rounded-2xl p-4 font-bold"
+        >
+          Talk to MindMirror
+        </button>
+
       </div>
+
     </main>
   );
 }

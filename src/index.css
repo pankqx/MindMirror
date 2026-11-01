@@ -1,3 +1,45 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap");
+
 @import "tailwindcss";
 
-/* Kishore: add the MindMirror @theme (colours + Nunito) below this line */
+@theme {
+  --color-indigo: #4F5BD5;
+  --color-sage: #8FB9A8;
+  --color-cream: #FBF7F0;
+  --color-coral: #E8836B;
+  --color-ink: #2B2D42;
+
+  --font-nunito: "Nunito", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+
+  background-color: #FBF7F0;
+  color: #2B2D42;
+
+  font-family: "Nunito", sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Kishore: added the MindMirror @theme (colours + Nunito) below this line */
