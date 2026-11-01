@@ -9,6 +9,8 @@ import { contextFor } from "../lib/signals";
 import { isCrisis } from "../lib/support";
 import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
+import { PageHeader } from "../components/ui";
+import { Logo } from "../components/TopBar";
 
 interface Msg extends Message { at: string }
 
@@ -118,29 +120,28 @@ export default function Companion() {
   const state: HoldState = hold !== "idle" ? hold : speaking ? "speaking" : "idle";
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-[720px] space-y-4">
       {(crisis || ins?.crisis) && <UrgentHelp />}
 
-      {/* companion presence */}
-      <div className="flex items-center gap-4 rounded-3xl border border-line/70 bg-card p-4 shadow-soft">
-        <div className="relative grid h-14 w-14 shrink-0 place-items-center">
-          <motion.span className="absolute inset-0 rounded-full bg-gradient-to-br from-sage to-indigo"
-            animate={{ scale: state === "speaking" ? [1, 1.12, 1] : thinking || state === "thinking" ? [1, 0.9, 1] : [1, 1.04, 1] }}
-            transition={{ duration: state === "speaking" ? 0.6 : 4, repeat: Infinity, ease: "easeInOut" }} />
-          <span className="relative text-2xl">🌿</span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold">MindMirror</p>
+      <PageHeader eyebrow="Companion" title={<>Talk it <em className="italic">out</em>.</>}
+        right={
+          <div className="relative grid h-14 w-14 shrink-0 place-items-center">
+            <motion.span className="absolute inset-0 rounded-full border border-indigo"
+              animate={{ scale: state === "speaking" ? [1, 1.25, 1] : thinking || state === "thinking" ? [1, 0.88, 1] : [1, 1.06, 1], opacity: [0.8, 0.3, 0.8] }}
+              transition={{ duration: state === "speaking" ? 0.7 : 4, repeat: Infinity, ease: "easeInOut" }} />
+            <Logo size={34} />
+          </div>
+        }
+        lede={
           <AnimatePresence mode="wait">
-            <motion.p key={`${online}-${thinking}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-soft">
+            <motion.span key={`${online}-${thinking}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {thinking === "necklace" ? (
-                <span className="flex items-center gap-1.5 text-indigo"><NecklaceIcon size={14} /> Your necklace is talking to me…</span>
-              ) : online ? "Here with you. Type, hold the mic (or Space), or use your necklace."
-                : online === false ? "Hub is off. I can still listen, with simple offline replies." : "Connecting…"}
-            </motion.p>
+                <span className="inline-flex items-center gap-1.5 text-indigo"><NecklaceIcon size={14} /> Your necklace is talking to me…</span>
+              ) : online ? "I listen, reflect, and suggest one small step. Type, hold the mic (or Space), or use your necklace."
+                : online === false ? "The hub is off, so I'll answer with simple offline replies." : "Connecting…"}
+            </motion.span>
           </AnimatePresence>
-        </div>
-      </div>
+        } />
 
       <Chat
         messages={msgs}

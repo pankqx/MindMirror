@@ -10,7 +10,7 @@ type SignalLevel = "steady" | "watch" | "needs care" | "learning";
 
 type SignalCardProps = {
   name: string;
-  icon: string;
+  icon: React.ReactNode;
   level: SignalLevel;
   proof: string;
   series?: Point[];
@@ -59,14 +59,14 @@ export default function SignalCard({ name, icon, level, proof, series, baseline,
   const canOpen = !!tip && level !== "learning";
 
   return (
-    <motion.div layout transition={spring} className="overflow-hidden rounded-3xl border border-line/70 bg-card shadow-soft">
+    <motion.div layout transition={spring} className="border-b border-line last:border-b-0">
       <button type="button" disabled={!canOpen} onClick={() => setOpen((o) => !o)} aria-expanded={open}
-        className="block w-full p-4 text-left">
+        className="group block w-full py-5 text-left">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-card-2 text-2xl">{icon}</div>
+          <div className="flex min-w-0 items-center gap-3.5">
+            <span className="text-ink">{icon}</span>
             <div className="min-w-0">
-              <h3 className="font-bold text-ink">{name}</h3>
+              <h3 className="text-[17px] font-medium text-ink">{name}</h3>
               <Pill tone={tone[level]}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: stroke[level] }} />
                 {level}
@@ -76,17 +76,15 @@ export default function SignalCard({ name, icon, level, proof, series, baseline,
           {series && level !== "learning" && <Sparkline series={series} baseline={baseline} level={level} />}
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-soft">{proof}</p>
+        <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-soft">{proof}</p>
+        {canOpen && !open && <p className="mt-2 text-[13px] font-medium text-faint transition-colors group-hover:text-indigo">One small thing to try</p>}
       </button>
 
       <AnimatePresence initial={false}>
         {open && tip && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-            <div className="mx-4 mb-4 rounded-2xl bg-sage/15 p-3 text-sm text-sage-ink">
-              <span className="font-bold">One small thing: </span>
-              {tip}
-            </div>
+            <p className="mb-5 border-l-2 border-sage pl-4 font-display text-[1.35rem] italic leading-snug text-ink">{tip}</p>
           </motion.div>
         )}
       </AnimatePresence>

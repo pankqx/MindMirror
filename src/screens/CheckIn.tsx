@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Button, Card, Slider, Toggle, Screen, spring, ease } from "../components/ui";
 import { CheckIcon, MinusIcon, PlusIcon } from "../components/Icons";
+import { MoodFace } from "../components/Glyphs";
 import { copy } from "../content/copy";
 
 // Kishore's 5-question check-in, plus the optional note as a last step,
@@ -35,7 +36,7 @@ const ENERGY_WORDS = ["Drained", "Low", "Okay", "Good", "Full"];
 function Title({ t, d }: { t: string; d: string }) {
   return (
     <>
-      <h2 className="mb-1.5 font-display text-2xl font-semibold">{t}</h2>
+      <h2 className="mb-2 font-display text-[2rem] leading-tight">{t}</h2>
       <p className="mb-7 text-soft">{d}</p>
     </>
   );
@@ -82,12 +83,12 @@ export default function CheckIn({ onSave }: CheckInProps) {
                 const on = mood === m.value;
                 return (
                   <motion.button key={m.value} onClick={() => setMood(m.value)} whileTap={{ scale: 0.88 }}
-                    className={`relative rounded-2xl px-1 py-3 transition-colors ${on ? "text-indigo" : "text-soft"}`}>
-                    {on && <motion.span layoutId="mood-pick" transition={spring} className="absolute inset-0 rounded-2xl border-2 border-indigo bg-indigo/10" />}
-                    <motion.div className="relative text-4xl" animate={{ scale: on ? 1.2 : 1, y: on ? -3 : 0, filter: on ? "grayscale(0)" : "grayscale(0.5)" }} transition={spring}>
-                      {m.emoji}
+                    className={`relative rounded-2xl px-1 py-3 transition-colors ${on ? "text-ink" : "text-faint"}`}>
+                    {on && <motion.span layoutId="mood-pick" transition={spring} className="absolute inset-0 rounded-2xl border border-ink" />}
+                    <motion.div className="relative mx-auto w-fit" animate={{ scale: on ? 1.15 : 1, y: on ? -2 : 0 }} transition={spring}>
+                      <MoodFace value={m.value} size={40} strokeWidth={on ? 1.6 : 1.3} />
                     </motion.div>
-                    <div className="relative mt-2 text-[11px] font-bold">{m.label}</div>
+                    <div className="relative mt-2 text-[12px] font-medium">{m.label}</div>
                   </motion.button>
                 );
               })}
@@ -100,7 +101,7 @@ export default function CheckIn({ onSave }: CheckInProps) {
         return (
           <>
             <Title t={copy.checkin.stress.title} d={copy.checkin.stress.description} />
-            <Slider label="Stress level" value={stress} onChange={setStress} leftEmoji="😌" rightEmoji="😰" words={STRESS_WORDS} />
+            <Slider label="Stress level" value={stress} onChange={setStress} leftEmoji="Calm" rightEmoji="Too much" words={STRESS_WORDS} />
           </>
         );
 
@@ -109,7 +110,7 @@ export default function CheckIn({ onSave }: CheckInProps) {
         return (
           <>
             <Title t={copy.checkin.energy.title} d={copy.checkin.energy.description} />
-            <Slider label="Energy level" value={energy} onChange={setEnergy} leftEmoji="🥱" rightEmoji="⚡" words={ENERGY_WORDS} />
+            <Slider label="Energy level" value={energy} onChange={setEnergy} leftEmoji="Drained" rightEmoji="Full" words={ENERGY_WORDS} />
           </>
         );
 
@@ -124,7 +125,7 @@ export default function CheckIn({ onSave }: CheckInProps) {
               <div className="w-28 text-center">
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div key={sleepHours} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }}
-                    transition={{ duration: 0.2 }} className="font-display text-6xl font-semibold text-indigo">
+                    transition={{ duration: 0.2 }} className="font-display text-7xl text-ink">
                     {sleepHours}
                   </motion.div>
                 </AnimatePresence>
@@ -145,7 +146,7 @@ export default function CheckIn({ onSave }: CheckInProps) {
         return (
           <>
             <Title t={copy.checkin.questions[4].question} d={copy.checkin.connected.description} />
-            <Toggle value={connected} onChange={setConnected} yesLabel="Yes 🙂" noLabel="Not yet" />
+            <Toggle value={connected} onChange={setConnected} yesLabel="Yes" noLabel="Not yet" />
           </>
         );
 
@@ -178,9 +179,9 @@ export default function CheckIn({ onSave }: CheckInProps) {
               <CheckIcon size={44} strokeWidth={2.6} />
             </motion.div>
           </div>
-          <motion.p className="mx-auto mt-8 max-w-xs font-display text-2xl font-semibold" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          <motion.p className="mx-auto mt-8 max-w-sm font-display text-[2rem] leading-tight" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, ease }}>
-            {copy.checkin.thankYou}
+            {copy.checkin.thankYou.replace(/\s*\p{Extended_Pictographic}\s*/gu, "")}
           </motion.p>
           <motion.p className="mt-2 text-sm text-soft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
             Updating your mind weather…

@@ -165,13 +165,13 @@ export default function Ripples() {
   };
 
   return (
-    <div className="overflow-hidden rounded-[2rem] border border-line/70 bg-card text-center shadow-soft">
+    <div className="overflow-hidden rounded-3xl border border-line text-center">
       <p className="py-4 text-sm text-soft">{taps === 0 ? "Tap the water. Watch it settle." : "Slowly. Let each ring finish."}</p>
       <canvas ref={canvasRef} onPointerDown={addRipple} className="block h-[60vh] max-h-[560px] w-full touch-none"
         aria-label="Tap or touch the pond to create ripples" />
       <div className="py-4">
         <button onClick={() => setRain((v) => !v)}
-          className={`rounded-full px-6 py-3 text-sm font-semibold transition-colors ${rain ? "bg-indigo text-indigo-ink" : "bg-card-2 text-ink"}`}>
+          className={`rounded-full px-6 py-3 text-sm font-semibold transition-colors ${rain ? "bg-ink text-bg" : "border border-line text-ink"}`}>
           {rain ? "Stop gentle rain" : "Gentle rain"}
         </button>
       </div>

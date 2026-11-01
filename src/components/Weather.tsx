@@ -13,16 +13,16 @@ type WeatherProps = {
 
 const SKY = {
   light: {
-    clear: ["#fde8c6", "#f9f1e4"],
-    clouds: ["#e3e9ef", "#f6f1e8"],
-    rain: ["#d5dde8", "#eef0f2"],
-    storm: ["#c3c6d6", "#e6e4ea"],
+    clear: ["#f6e6c8", "#f5f2ec"],
+    clouds: ["#e4e7e9", "#f5f2ec"],
+    rain: ["#dde2e7", "#f5f2ec"],
+    storm: ["#cfd1d9", "#efedea"],
   },
   dark: {
-    clear: ["#1e2346", "#151826"],
-    clouds: ["#1f2436", "#161925"],
-    rain: ["#1a2030", "#141722"],
-    storm: ["#181a26", "#101118"],
+    clear: ["#1d2040", "#111112"],
+    clouds: ["#1c1f2c", "#111112"],
+    rain: ["#191c26", "#111112"],
+    storm: ["#16171d", "#0d0d0e"],
   },
 };
 
@@ -36,7 +36,7 @@ export default function Weather({ kind, title, message, label = "Your mind weath
   const loop = (d: number, delay = 0) => ({ duration: d, repeat: Infinity, ease: "easeInOut" as const, delay });
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-line/70 shadow-soft">
+    <div className="relative overflow-hidden rounded-3xl border border-line">
       <motion.div
         className="absolute inset-0"
         animate={{ background: `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)` }}
@@ -112,11 +112,11 @@ export default function Weather({ kind, title, message, label = "Your mind weath
       </svg>
 
       <div className="relative px-6 pb-6 pt-1">
-        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-faint">{label}</p>
+        <p className="text-[13px] font-medium text-faint">{label}</p>
         <AnimatePresence mode="wait">
           <motion.div key={title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35 }}>
-            <h2 className="mt-1 font-display text-3xl font-semibold text-ink">{title}</h2>
-            <p className="mt-1.5 text-[15px] leading-relaxed text-soft">{message}</p>
+            <h2 className="mt-1 font-display text-[2.4rem] text-ink">{title}</h2>
+            <p className="mt-2 max-w-[40ch] text-[15px] leading-relaxed text-soft">{message}</p>
           </motion.div>
         </AnimatePresence>
       </div>

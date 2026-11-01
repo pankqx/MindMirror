@@ -36,7 +36,7 @@ function Segmented<T extends string>({ value, options, onChange, id }: { value: 
   return (
     <div className="grid rounded-2xl bg-card-2 p-1" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
       {options.map(([v, label]) => (
-        <button key={v} onClick={() => onChange(v)} className={`relative min-h-11 rounded-xl text-sm font-bold ${value === v ? "text-ink" : "text-faint"}`}>
+        <button key={v} onClick={() => onChange(v)} className={`relative min-h-11 rounded-xl text-sm font-semibold ${value === v ? "text-ink" : "text-faint"}`}>
           {value === v && <motion.span layoutId={`seg-${id}`} transition={spring} className="absolute inset-0 rounded-xl bg-card shadow-soft" />}
           <span className="relative">{label}</span>
         </button>
@@ -49,7 +49,7 @@ function Row({ title, hint, children }: { title: string; hint?: string; children
   return (
     <div className="space-y-2.5">
       <div>
-        <p className="font-bold">{title}</p>
+        <p className="font-semibold">{title}</p>
         {hint && <p className="text-sm text-soft">{hint}</p>}
       </div>
       {children}
@@ -84,7 +84,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
           <Segmented id="voice" value={p.voiceReplies ? "on" : "off"} onChange={(v) => setPrefs({ voiceReplies: v === "on" })}
             options={[["on", "Speak on laptop"], ["off", "Text only"]]} />
           <button onClick={() => { unlockAudio(); void speakReply("Hi, I'm MindMirror. I'll speak your necklace replies here."); }}
-            className="flex items-center gap-2 text-sm font-bold text-indigo">
+            className="flex items-center gap-2 text-sm font-semibold text-indigo">
             <SpeakerIcon size={18} /> Test the laptop voice
           </button>
         </Row>
@@ -97,26 +97,26 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
         <Row title="Your data" hint="Everything is saved only in this browser. Nothing is uploaded.">
           <div className="grid grid-cols-2 gap-2">
             <button onClick={async () => { await loadSample(); flash("Loaded Asha's 3 weeks"); }}
-              className="min-h-12 rounded-2xl border border-line bg-card px-3 text-sm font-bold text-indigo">Load sample (Asha)</button>
+              className="min-h-12 rounded-2xl border border-line bg-card px-3 text-sm font-semibold text-indigo">Load sample (Asha)</button>
             {!confirm ? (
-              <button onClick={() => setConfirm(true)} className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-line bg-card px-3 text-sm font-bold text-coral-ink">
+              <button onClick={() => setConfirm(true)} className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-line bg-card px-3 text-sm font-semibold text-coral-ink">
                 <TrashIcon size={17} /> Delete all
               </button>
             ) : (
               <button onClick={async () => { await deleteAllData(); setConfirm(false); flash("All data deleted"); }}
-                className="min-h-12 rounded-2xl bg-coral px-3 text-sm font-bold text-white">Tap again to delete</button>
+                className="min-h-12 rounded-2xl bg-coral px-3 text-sm font-semibold text-white">Tap again to delete</button>
             )}
           </div>
           <AnimatePresence>
             {done && (
-              <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-sm font-bold text-sage-ink">
+              <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-sm font-semibold text-sage-ink">
                 {done}
               </motion.p>
             )}
           </AnimatePresence>
         </Row>
 
-        <button onClick={() => { setPrefs({ welcomed: false }); onClose(); }} className="text-sm font-bold text-soft underline-offset-4 hover:underline">
+        <button onClick={() => { setPrefs({ welcomed: false }); onClose(); }} className="text-sm font-semibold text-soft underline-offset-4 hover:underline">
           Show the welcome again
         </button>
 

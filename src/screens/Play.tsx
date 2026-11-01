@@ -5,17 +5,19 @@ import BubbleWrap from "../games/BubbleWrap";
 import WorryShredder from "../games/WorryShredder";
 import Ripples from "../games/Ripples";
 import { BackIcon } from "../components/Icons";
-import { ease, spring } from "../components/ui";
+import { PageHeader } from "../components/ui";
+import { ease } from "../components/ui";
 
 // Merel's Play room: no scores, no timers, no way to lose.
 
 type GameName = "bubbleWrap" | "worryShredder" | "ripples";
 
 const TINT: Record<GameName, string> = {
-  bubbleWrap: "from-sage/45 to-sage/10",
-  worryShredder: "from-sun/40 to-coral/10",
-  ripples: "from-sky/50 to-indigo/10",
+  bubbleWrap: "bg-sage/35",
+  worryShredder: "bg-sun/30",
+  ripples: "bg-sky/40",
 };
+
 
 /** Small looping preview on each game card. */
 function Preview({ id }: { id: GameName }) {
@@ -65,36 +67,36 @@ export default function Play() {
         <motion.div key={selected.id} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }}
           transition={{ duration: 0.3, ease }}>
           <button onClick={() => setActiveGame(null)}
-            className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-4 py-2.5 text-sm font-semibold text-ink">
+            className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink">
             <BackIcon size={16} /> Play room
           </button>
           {selected.component}
         </motion.div>
       ) : (
         <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <h1 className="font-display text-3xl font-semibold">Play room</h1>
-          <p className="mb-7 mt-1 text-sm text-soft">No scores. No timers. No way to lose.</p>
+          <PageHeader eyebrow="Play room" title={<>Do something <em className="italic">small</em>.</>} lede="No scores. No timers. No way to lose." />
 
-          <div className="space-y-4">
+          <div className="grid gap-3 lg:grid-cols-3">
             {games.map((game, i) => {
               const details = copy.games[game.id];
               return (
                 <motion.button key={game.id} onClick={() => setActiveGame(game.id)}
                   initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08, duration: 0.5, ease }}
                   whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}
-                  className={`relative flex w-full items-center gap-4 overflow-hidden rounded-[2rem] border border-line/70 bg-gradient-to-br ${TINT[game.id]} bg-card p-5 text-left shadow-soft`}>
-                  <span className="text-4xl">{details.emoji}</span>
-                  <span className="flex-1">
-                    <span className="block text-lg font-bold">{details.title}</span>
-                    <span className="mt-1 block text-sm text-soft">{details.description}</span>
+                  className={`group relative flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-line p-5 text-left transition-colors hover:border-ink/25 lg:min-h-[260px] lg:flex-col lg:items-start lg:justify-between lg:p-6`}>
+                  <span className={`grid h-16 w-16 shrink-0 place-items-center rounded-full ${TINT[game.id]} text-ink lg:h-24 lg:w-24`}>
+                    <Preview id={game.id} />
                   </span>
-                  <motion.span transition={spring}><Preview id={game.id} /></motion.span>
+                  <span className="flex-1 lg:flex-none">
+                    <span className="flex items-center gap-2 font-display text-[1.7rem] leading-tight">{details.title}</span>
+                    <span className="mt-1 block text-[15px] text-soft">{details.description}</span>
+                  </span>
                 </motion.button>
               );
             })}
           </div>
 
-          <p className="mt-8 text-center text-xs text-faint">
+          <p className="mt-8 text-xs text-faint">
             Doing beats reading when you're stressed. Try one for a minute.
           </p>
         </motion.div>

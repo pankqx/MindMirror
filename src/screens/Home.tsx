@@ -1,9 +1,10 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { motion } from "framer-motion";
+import { SignalGlyph } from "../components/Glyphs";
 import { ArrowIcon, CalendarIcon, ChatIcon, CheckIcon, NecklaceIcon, PlayIcon, WindIcon } from "../components/Icons";
 import { Dots } from "../components/LiveToasts";
 import Weather from "../components/Weather";
-import { item, list, Pill, SectionTitle, spring, TapCard } from "../components/ui";
+import { item, list, PageHeader, SectionTitle, spring } from "../components/ui";
 import { copy } from "../content/copy";
 import { db, localDate } from "../lib/db";
 import { useThinking } from "../lib/hub";
@@ -32,7 +33,22 @@ export function ago(iso: string) {
   return d === 1 ? "yesterday" : `${d} days ago`;
 }
 
-const LEVEL_COLOR = { steady: "var(--sage)", watch: "var(--sun)", "needs care": "var(--coral)", learning: "var(--line)" };
+export const LEVEL_COLOR = { steady: "var(--sage)", watch: "var(--sun)", "needs care": "var(--coral)", learning: "var(--line)" };
+
+/** A list row: glyph, words, and an arrow that nudges on hover. */
+export function Row({ onClick, icon, title, meta, right }: { onClick: () => void; icon: React.ReactNode; title: React.ReactNode; meta?: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <motion.button onClick={onClick} whileTap={{ scale: 0.99 }} transition={spring}
+      className="group flex w-full items-center gap-4 border-b border-line py-4 text-left last:border-b-0">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-ink">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-medium text-ink">{title}</span>
+        {meta && <span className="mt-0.5 block text-[13px] text-soft">{meta}</span>}
+      </span>
+      {right ?? <ArrowIcon size={17} className="text-faint transition-transform group-hover:translate-x-1 group-hover:text-ink" />}
+    </motion.button>
+  );
+}
 
 export default function Home({ go }: { go: Go }) {
   const { name } = usePrefs();
@@ -46,120 +62,99 @@ export default function Home({ go }: { go: Go }) {
   const w = ins ? copy.weather[ins.weather] : null;
 
   return (
-    <motion.div className="space-y-5" variants={list} initial="hidden" animate="show">
-      <motion.header variants={item}>
-        <p className="text-sm font-semibold text-faint">
-          {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
-        </p>
-        <h1 className="mt-1 font-display text-[2rem] font-semibold leading-tight">
-          {greeting()}{name ? `, ${name}` : ""}.
-        </h1>
-        <p className="mt-1 text-soft">How's your mind today?</p>
-      </motion.header>
+    <motion.div variants={list} initial="hidden" animate="show">
+      <PageHeader
+        eyebrow={new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+        title={<>{greeting()}{name ? <>, <em className="italic">{name}</em></> : ""}.</>}
+        lede="How's your mind today?"
+      />
 
-      {ins?.crisis && <motion.div variants={item}><UrgentHelp /></motion.div>}
+      {ins?.crisis && <motion.div variants={item} className="mb-6"><UrgentHelp /></motion.div>}
 
-      {ins && w && (
-        <motion.button variants={item} onClick={() => go("insights")} whileTap={{ scale: 0.985 }} transition={spring}
-          className="block w-full text-left" aria-label="Open insights">
-          <Weather kind={ins.weather} title={ins.weatherTitle} message={w.line} />
-        </motion.button>
-      )}
+      <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+        {/* left: the weather and the one thing to do */}
+        <div className="space-y-6">
+          {ins && w && (
+            <motion.button variants={item} onClick={() => go("insights")} whileTap={{ scale: 0.99 }} transition={spring}
+              className="block w-full text-left" aria-label="Open insights">
+              <Weather kind={ins.weather} title={ins.weatherTitle} message={w.line} />
+            </motion.button>
+          )}
 
-      {/* signals at a glance */}
-      {ins && (
-        <motion.div variants={item}>
-          <TapCard onClick={() => go("insights")} className="!p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+          <motion.div variants={item}>
+            {doneToday ? (
+              <button onClick={() => go("checkin")} className="flex w-full items-center gap-3 text-left text-[15px] text-soft hover:text-ink">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-sage text-bg"><CheckIcon size={15} strokeWidth={2.4} /></span>
+                Checked in today{days > 1 ? ` · ${days} days in a row` : ""}. <span className="underline decoration-line underline-offset-4">Update</span>
+              </button>
+            ) : (
+              <motion.button onClick={() => go("checkin")} whileTap={{ scale: 0.98 }} transition={spring}
+                className="group flex h-14 w-full items-center justify-between rounded-full bg-ink pl-6 pr-2 text-bg">
+                <span className="text-[15px] font-semibold">Check in <span className="font-normal opacity-60">· 30 seconds</span></span>
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-bg/15 transition-transform group-hover:translate-x-0.5"><ArrowIcon size={18} /></span>
+              </motion.button>
+            )}
+          </motion.div>
+
+          {/* necklace */}
+          <motion.div variants={item}>
+            <SectionTitle action={lastTurn && !thinking ? <span className="text-[13px] text-faint">{ago(lastTurn.at)}</span> : undefined}>
+              <span className="flex items-center gap-2"><NecklaceIcon size={15} /> From your necklace</span>
+            </SectionTitle>
+            <button onClick={() => go("companion")} className="block w-full py-2 text-left">
+              {thinking ? (
+                <span className="flex items-center gap-3 text-indigo">Listening to you <Dots /></span>
+              ) : lastTurn ? (
+                <>
+                  <p className="font-display text-[1.6rem] italic leading-snug text-ink">“{lastTurn.heard}”</p>
+                  <p className="mt-3 border-l-2 border-indigo pl-4 text-[15px] leading-relaxed text-soft">{lastTurn.reply}</p>
+                </>
+              ) : (
+                <span className="text-[15px] text-soft">Hold the necklace button and just talk. It shows up here.</span>
+              )}
+            </button>
+          </motion.div>
+        </div>
+
+        {/* right: the five signals and calm tools */}
+        <div>
+          {ins && (
+            <motion.div variants={item}>
+              <SectionTitle action={<button onClick={() => go("insights")} className="text-[13px] font-medium text-indigo">See proof</button>}>
+                Five signals, against your own normal
+              </SectionTitle>
+              <div>
                 {ins.signals.map((s, i) => (
-                  <motion.div key={s.key} className="grid h-10 w-10 place-items-center rounded-2xl text-lg"
-                    style={{ background: `color-mix(in oklab, ${LEVEL_COLOR[s.level]} 30%, transparent)` }}
-                    initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ ...spring, delay: 0.3 + i * 0.06 }}
-                    title={`${s.name}: ${s.level}`}>
-                    {s.icon}
-                  </motion.div>
+                  <motion.button key={s.key} onClick={() => go("insights")}
+                    initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.05, duration: 0.4 }}
+                    className="flex w-full items-center gap-4 border-b border-line py-3.5 text-left last:border-b-0">
+                    <SignalGlyph k={s.key} size={22} className="text-ink" />
+                    <span className="flex-1 text-[15px] font-medium">{s.name}</span>
+                    <span className="flex items-center gap-2 text-[13px] text-soft">
+                      <span className="h-2 w-2 rounded-full" style={{ background: LEVEL_COLOR[s.level] }} />
+                      {s.level}
+                    </span>
+                  </motion.button>
                 ))}
               </div>
-              <ArrowIcon size={18} className="text-faint" />
-            </div>
-            <p className="mt-3 text-sm text-soft">
-              <span className="font-bold text-ink">{ins.rung.title}.</span> {ins.rung.action}
-            </p>
-          </TapCard>
-        </motion.div>
-      )}
-
-      {/* check-in */}
-      <motion.div variants={item}>
-        {doneToday ? (
-          <TapCard onClick={() => go("checkin")} className="flex items-center gap-4 !p-4">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-sage/30 text-sage-ink"><CheckIcon /></span>
-            <span className="flex-1">
-              <span className="block font-bold">Checked in today</span>
-              <span className="block text-sm text-soft">{days > 1 ? `${days} days in a row. ` : ""}Tap to update.</span>
-            </span>
-          </TapCard>
-        ) : (
-          <motion.button onClick={() => go("checkin")} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} transition={spring}
-            className="group relative w-full overflow-hidden rounded-3xl bg-indigo p-5 text-left text-indigo-ink shadow-soft">
-            <motion.span className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10"
-              animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 4, repeat: Infinity }} />
-            <span className="relative block text-xs font-extrabold uppercase tracking-[0.14em] opacity-80">30 seconds</span>
-            <span className="relative mt-1 flex items-center justify-between font-display text-2xl font-semibold">
-              Check in now <ArrowIcon className="transition-transform group-hover:translate-x-1" />
-            </span>
-            {days > 0 && <span className="relative mt-1 block text-sm opacity-80">{days} day streak. Keep it gentle.</span>}
-          </motion.button>
-        )}
-      </motion.div>
-
-      {/* necklace */}
-      <motion.div variants={item}>
-        <SectionTitle>From your necklace</SectionTitle>
-        <TapCard onClick={() => go("companion")} className="!p-4">
-          {thinking ? (
-            <div className="flex items-center gap-3 text-indigo">
-              <NecklaceIcon /> <span className="font-bold">Listening to you</span> <Dots />
-            </div>
-          ) : lastTurn ? (
-            <>
-              <div className="flex items-center justify-between">
-                <Pill tone="indigo"><NecklaceIcon size={13} /> {lastTurn.source === "necklace" ? "Necklace" : "Voice"}</Pill>
-                <span className="text-xs text-faint">{ago(lastTurn.at)}</span>
-              </div>
-              <p className="mt-3 text-sm text-soft">“{lastTurn.heard}”</p>
-              <p className="mt-1.5 font-semibold text-ink">{lastTurn.reply}</p>
-            </>
-          ) : (
-            <div className="flex items-center gap-3 text-soft">
-              <NecklaceIcon /> Hold the necklace button and just talk. It shows up here.
-            </div>
+              <p className="mt-4 text-[15px] leading-relaxed text-soft">
+                <span className="font-medium text-ink">{ins.rung.title}.</span> {ins.rung.action}
+              </p>
+            </motion.div>
           )}
-        </TapCard>
-      </motion.div>
 
-      {/* quick calm */}
-      <motion.div variants={item}>
-        <SectionTitle>Feel lighter</SectionTitle>
-        <div className="grid grid-cols-2 gap-3">
-          {([
-            ["breathe", WindIcon, "Breathe", "One minute, 4 in, 6 out", "bg-sky/30 text-indigo"],
-            ["play", PlayIcon, "Play room", "Pop, shred, ripple", "bg-sage/30 text-sage-ink"],
-            ["companion", ChatIcon, "Talk it out", "Type or hold to talk", "bg-indigo/15 text-indigo"],
-            ["planner", CalendarIcon, "Planner", "Deadlines vs hours", "bg-sun/30 text-sun-ink"],
-          ] as const).map(([to, Icon, title, line, tint]) => (
-            <TapCard key={to} onClick={() => go(to)} className="!p-4">
-              <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tint}`}><Icon /></span>
-              <span className="mt-3 block font-bold">{title}</span>
-              <span className="block text-xs text-soft">{line}</span>
-            </TapCard>
-          ))}
+          <motion.div variants={item} className="mt-8">
+            <SectionTitle>Feel a little lighter</SectionTitle>
+            <Row onClick={() => go("breathe")} icon={<WindIcon size={19} />} title="Breathe" meta="One minute, 4 in and 6 out" />
+            <Row onClick={() => go("play")} icon={<PlayIcon size={19} />} title="Play room" meta="Pop, shred, ripple" />
+            <Row onClick={() => go("companion")} icon={<ChatIcon size={19} />} title="Talk it out" meta="Type, or hold to talk" />
+            <Row onClick={() => go("planner")} icon={<CalendarIcon size={19} />} title="Planner" meta="Deadlines against hours" />
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div variants={item} className="pt-2 text-center">
-        <button onClick={() => void loadSample()} className="text-sm font-semibold text-faint underline-offset-4 hover:underline">
+      <motion.div variants={item} className="mt-12 border-t border-line pt-6 text-center lg:text-left">
+        <button onClick={() => void loadSample()} className="text-[13px] font-medium text-soft underline decoration-line underline-offset-4 hover:text-ink">
           {checkins?.length ? "Reset to sample data (Asha, 3 weeks)" : "Explore with sample data (Asha, 3 weeks)"}
         </button>
         <p className="mt-2 text-xs text-faint">{copy.disclaimer}</p>
