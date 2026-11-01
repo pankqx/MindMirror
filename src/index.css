@@ -1,45 +1,207 @@
-
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
 
-@theme {
-  --color-indigo: #4F5BD5;
-  --color-sage: #8FB9A8;
-  --color-cream: #FBF7F0;
-  --color-coral: #E8836B;
-  --color-ink: #2B2D42;
-
-  --font-nunito: "Nunito", sans-serif;
+/*
+  MindMirror look: calm paper by day, quiet night by night.
+  Kishore's palette (indigo, sage, cream, coral, ink) is kept; every colour is a
+  CSS variable so the dark theme is a swap, not a rewrite. Red is for urgent help only.
+*/
+:root {
+  --bg: #fbf7f0;
+  --bg-2: #f3ede2;
+  --card: #ffffff;
+  --card-2: #f7f2ea;
+  --ink: #2b2d42;
+  --soft: #5f6175;
+  --faint: #9a9aa8;
+  --line: #e9e2d6;
+  --indigo: #4f5bd5;
+  --indigo-ink: #ffffff;
+  --sage: #8fb9a8;
+  --sage-ink: #2f5446;
+  --coral: #e8836b;
+  --coral-ink: #9a4630;
+  --sun: #f5c66b;
+  --sun-ink: #8a6312;
+  --sky: #a9c6e3;
+  --urgent: #d63c32;
+  --shadow: 0 1px 0 rgba(43, 45, 66, 0.03), 0 12px 32px -18px rgba(79, 91, 213, 0.28);
+  --glow-a: rgba(232, 131, 107, 0.16);
+  --glow-b: rgba(143, 185, 168, 0.22);
+  color-scheme: light;
 }
 
-html {
-  scroll-behavior: smooth;
+:root[data-theme="dark"] {
+  --bg: #12131b;
+  --bg-2: #181a24;
+  --card: #1c1e2a;
+  --card-2: #232636;
+  --ink: #eeebe6;
+  --soft: #b4b2bd;
+  --faint: #7c7b88;
+  --line: #2c2f40;
+  --indigo: #9aa4ff;
+  --indigo-ink: #12131b;
+  --sage: #8fc2ad;
+  --sage-ink: #bfe3d3;
+  --coral: #f0947d;
+  --coral-ink: #f6b9a8;
+  --sun: #f2cd7c;
+  --sun-ink: #f3d590;
+  --sky: #7f9fc4;
+  --urgent: #ff6b5e;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.25), 0 16px 36px -20px rgba(0, 0, 0, 0.85);
+  --glow-a: rgba(154, 164, 255, 0.12);
+  --glow-b: rgba(143, 194, 173, 0.1);
+  color-scheme: dark;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-
-  background-color: #FBF7F0;
-  color: #2B2D42;
-
-  font-family: "Nunito", sans-serif;
-}
-
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-ink: var(--ink);
+  --color-soft: var(--soft);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-indigo: var(--indigo);
+  --color-indigo-ink: var(--indigo-ink);
+  --color-sage: var(--sage);
+  --color-sage-ink: var(--sage-ink);
+  --color-coral: var(--coral);
+  --color-coral-ink: var(--coral-ink);
+  --color-sun: var(--sun);
+  --color-sun-ink: var(--sun-ink);
+  --color-sky: var(--sky);
+  --color-urgent: var(--urgent);
+  --color-cream: var(--bg);
+  --font-nunito: "Nunito", system-ui, sans-serif;
+  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --shadow-soft: var(--shadow);
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Kishore: added the MindMirror @theme (colours + Nunito) below this line */
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Nunito", system-ui, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* a faint dawn wash behind every page */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: 55vh;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60% 80% at 10% 0%, var(--glow-a), transparent 70%),
+    radial-gradient(60% 80% at 95% 5%, var(--glow-b), transparent 70%);
+  transition: opacity 0.5s ease;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+@layer base {
+  button,
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: default;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--indigo) 30%, transparent);
+}
+
+/* range slider, themed */
+input[type="range"].mm-range {
+  appearance: none;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--indigo) var(--fill, 50%), var(--line) var(--fill, 50%));
+  outline: none;
+}
+input[type="range"].mm-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 3px solid var(--indigo);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease;
+}
+input[type="range"].mm-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+input[type="range"].mm-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 3px solid var(--indigo);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.font-display {
+  font-family: "Fraunces", Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
