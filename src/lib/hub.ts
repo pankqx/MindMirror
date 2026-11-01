@@ -4,7 +4,22 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { db, type Mood, type VoiceTurn } from "./db";
 import { getPrefs } from "./prefs";
 
-export const HUB = "http://localhost:8787";
+/**
+ * The hub runs on the laptop, port 8787. Use the same machine that served this page,
+ * so a phone on the same Wi-Fi (http://192.168.x.x:5173) finds the laptop's hub too.
+ * Override with localStorage "mindmirror.hub" if the hub is somewhere else.
+ */
+function hubUrl() {
+  try {
+    const custom = localStorage.getItem("mindmirror.hub");
+    if (custom) return custom.replace(/\/$/, "");
+  } catch {
+    /* storage blocked */
+  }
+  return `http://${location.hostname || "localhost"}:8787`;
+}
+
+export const HUB = hubUrl();
 
 export interface Reply {
   reply: string;

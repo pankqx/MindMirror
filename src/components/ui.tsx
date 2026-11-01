@@ -22,8 +22,8 @@ type ButtonProps = {
 
 export function Button({ variant = "primary", onClick, children, className = "", disabled, type = "button" }: ButtonProps) {
   const styles = {
-    primary: "bg-indigo text-indigo-ink shadow-soft",
-    soft: "bg-card text-indigo border border-line",
+    primary: "bg-ink text-bg hover:opacity-90",
+    soft: "bg-transparent text-ink border border-line hover:bg-card-2",
     urgent: "bg-urgent text-white",
     ghost: "bg-transparent text-soft",
   };
@@ -33,10 +33,9 @@ export function Button({ variant = "primary", onClick, children, className = "",
       type={type}
       onClick={onClick}
       disabled={disabled}
-      whileTap={disabled ? undefined : { scale: 0.96 }}
-      whileHover={disabled ? undefined : { y: -1 }}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={spring}
-      className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 font-bold transition-colors disabled:opacity-40 ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-[15px] font-semibold transition-colors disabled:opacity-35 ${styles[variant]} ${className}`}
     >
       {children}
     </motion.button>
@@ -54,7 +53,7 @@ type CardProps = {
 
 export function Card({ children, className = "", ...rest }: CardProps) {
   return (
-    <motion.div className={`rounded-3xl border border-line/70 bg-card p-5 shadow-soft ${className}`} {...rest}>
+    <motion.div className={`rounded-3xl border border-line bg-card p-5 ${className}`} {...rest}>
       {children}
     </motion.div>
   );
@@ -77,10 +76,9 @@ export function TapCard({
       type="button"
       aria-label={label}
       onClick={onClick}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.98 }}
       transition={spring}
-      className={`block w-full rounded-3xl border border-line/70 bg-card p-5 text-left shadow-soft ${className}`}
+      className={`block w-full rounded-3xl border border-line bg-card p-5 text-left transition-colors hover:border-ink/25 ${className}`}
     >
       {children}
     </motion.button>
@@ -105,13 +103,13 @@ export function Slider({ label, value, onChange, leftEmoji, rightEmoji, words }:
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
-        <label className="font-bold text-ink">{label}</label>
+        <label className="font-medium text-soft">{label}</label>
         <motion.span
           key={value}
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={spring}
-          className="rounded-full bg-indigo/12 px-3 py-1 font-bold text-indigo"
+          className="font-display text-3xl text-ink"
         >
           {words?.[value - 1] ?? `${value}/5`}
         </motion.span>
@@ -129,7 +127,7 @@ export function Slider({ label, value, onChange, leftEmoji, rightEmoji, words }:
         style={{ "--fill": fill } as React.CSSProperties}
       />
 
-      <div className="flex justify-between text-2xl">
+      <div className="flex justify-between text-[13px] text-faint">
         <span>{leftEmoji}</span>
         <span>{rightEmoji}</span>
       </div>
@@ -156,10 +154,10 @@ export function Toggle({ value, onChange, yesLabel, noLabel }: ToggleProps) {
           key={String(v)}
           type="button"
           onClick={() => onChange(v)}
-          className={`relative z-10 min-h-12 rounded-xl font-bold transition-colors ${value === v ? "text-sage-ink" : "text-soft"}`}
+          className={`relative z-10 min-h-12 rounded-xl font-semibold transition-colors ${value === v ? "text-bg" : "text-soft"}`}
         >
           {value === v && (
-            <motion.span layoutId="toggle-pill" transition={spring} className="absolute inset-0 -z-10 rounded-xl bg-sage/35" />
+            <motion.span layoutId="toggle-pill" transition={spring} className="absolute inset-0 -z-10 rounded-xl bg-ink" />
           )}
           {v ? yesLabel : noLabel}
         </button>
@@ -181,20 +179,30 @@ type ScreenProps = {
 
 export function Screen({ title, subtitle, onBack, children }: ScreenProps) {
   return (
-    <div>
-      <header className="mb-6 flex items-center gap-3">
-        {onBack && (
-          <button onClick={onBack} aria-label="Go back" className="grid h-11 w-11 place-items-center rounded-full bg-card text-indigo shadow-soft">
-            <BackIcon />
-          </button>
-        )}
-        <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-soft">{subtitle}</p>}
-        </div>
-      </header>
+    <div className="lg:max-w-[680px]">
+      {onBack && (
+        <button onClick={onBack} aria-label="Go back" className="mb-4 grid h-10 w-10 place-items-center rounded-full border border-line text-ink">
+          <BackIcon />
+        </button>
+      )}
+      <PageHeader title={title} lede={subtitle} />
       {children}
     </div>
+  );
+}
+
+/** Editorial page header: a small eyebrow, a serif title, one line of lede. */
+export function PageHeader({ eyebrow, title, lede, right }: { eyebrow?: string; title: React.ReactNode; lede?: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <motion.header className="mb-8 mt-2 flex items-end justify-between gap-4 lg:mb-10" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease }}>
+      <div className="min-w-0">
+        {eyebrow && <p className="mb-2 text-[13px] font-medium text-faint">{eyebrow}</p>}
+        <h1 className="font-display text-[2.6rem] text-ink lg:text-[3.4rem]">{title}</h1>
+        {lede && <p className="mt-3 max-w-[36ch] text-[15px] leading-relaxed text-soft">{lede}</p>}
+      </div>
+      {right}
+    </motion.header>
   );
 }
 
@@ -204,13 +212,13 @@ export function Screen({ title, subtitle, onBack, children }: ScreenProps) {
 
 export function Pill({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "sage" | "sun" | "coral" | "indigo" }) {
   const tones = {
-    neutral: "bg-card-2 text-soft",
-    sage: "bg-sage/25 text-sage-ink",
-    sun: "bg-sun/30 text-sun-ink",
-    coral: "bg-coral/25 text-coral-ink",
-    indigo: "bg-indigo/15 text-indigo",
+    neutral: "text-faint",
+    sage: "text-sage-ink",
+    sun: "text-sun-ink",
+    coral: "text-coral-ink",
+    indigo: "text-indigo",
   };
-  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] font-medium ${tones[tone]}`}>{children}</span>;
 }
 
 /** Staggered fade-up for lists of cards. */
@@ -225,8 +233,8 @@ export const item = {
 
 export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="mb-3 mt-2 flex items-end justify-between">
-      <h2 className="text-xs font-extrabold uppercase tracking-[0.14em] text-faint">{children}</h2>
+    <div className="mb-3 mt-4 flex items-end justify-between border-b border-line pb-2.5">
+      <h2 className="text-[13px] font-medium text-soft">{children}</h2>
       {action}
     </div>
   );

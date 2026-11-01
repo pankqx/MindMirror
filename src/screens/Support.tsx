@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PhoneIcon } from "../components/Icons";
-import { ease, spring } from "../components/ui";
+import { ease, PageHeader, spring } from "../components/ui";
 import { copy } from "../content/copy";
 import { setPrefs, usePrefs } from "../lib/prefs";
 
@@ -19,10 +19,10 @@ export default function Support({ current }: Props) {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold">Support</h1>
-      <p className="mb-7 mt-1 text-sm text-soft">
-        There's no one right way to feel better. Take things one step at a time.
-      </p>
+      <PageHeader eyebrow="Support" title={<>One step at a <em className="italic">time</em>.</>}
+        lede="There's no one right way to feel better. We point to people, never to labels." />
+      <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
+      <div>
 
       <ol className="relative space-y-3">
         {/* the path that links the steps */}
@@ -40,15 +40,15 @@ export default function Support({ current }: Props) {
                   <motion.span className="absolute inset-1 rounded-full" style={{ background: DOT[index] }}
                     animate={{ scale: [1, 1.5], opacity: [0.5, 0] }} transition={{ duration: 1.8, repeat: Infinity }} />
                 )}
-                <span className={`relative grid h-10 w-10 place-items-center rounded-full border-2 text-sm font-extrabold ${here ? "border-transparent text-ink" : "border-line bg-card text-faint"}`}
+                <span className={`relative grid h-10 w-10 place-items-center rounded-full border-2 text-sm font-semibold ${here ? "border-transparent text-ink" : "border-line bg-card text-faint"}`}
                   style={here ? { background: DOT[index] } : undefined}>
                   {index + 1}
                 </span>
               </div>
-              <div className={`flex-1 rounded-3xl border p-5 transition-colors ${here ? "border-indigo/40 bg-card shadow-soft" : "border-line/60 bg-card/50"}`}>
-                {here && <p className="mb-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-indigo">You are here</p>}
-                {next && <p className="mb-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-faint">A gentle next step</p>}
-                <h2 className="font-bold">{step.title}</h2>
+              <div className={`flex-1 rounded-3xl border p-5 transition-colors ${here ? "border-ink/30 bg-card" : "border-line"}`}>
+                {here && <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-indigo">You are here</p>}
+                {next && <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-faint">A gentle next step</p>}
+                <h2 className="font-semibold">{step.title}</h2>
                 <p className="mt-1 text-sm text-soft">{step.line}</p>
               </div>
             </motion.li>
@@ -56,19 +56,21 @@ export default function Support({ current }: Props) {
         })}
       </ol>
 
-      <div className="mt-8 space-y-3">
+      </div>
+      <div className="space-y-3 lg:sticky lg:top-10 lg:self-start">
+        <p className="mb-4 font-display text-3xl leading-tight">Real people, <em className="italic">one tap</em> away.</p>
         <motion.a whileTap={{ scale: 0.97 }} transition={spring} href="tel:14416"
-          className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-indigo px-5 py-4 text-center font-bold text-indigo-ink shadow-soft">
+          className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-ink px-5 py-4 text-center font-semibold text-bg">
           <PhoneIcon size={20} /> Call Tele-MANAS 14416 <span className="font-semibold opacity-75">· free, 24×7</span>
         </motion.a>
 
         <motion.a whileTap={{ scale: 0.97 }} transition={spring} href="tel:112"
-          className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-urgent px-5 py-4 text-center font-bold text-white">
+          className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-urgent px-5 py-4 text-center font-semibold text-white">
           <PhoneIcon size={20} /> Emergency 112
         </motion.a>
 
         <button onClick={() => setShowCounsellor((v) => !v)}
-          className="min-h-14 w-full rounded-2xl border border-line bg-card px-5 py-4 font-bold text-ink">
+          className="min-h-14 w-full rounded-full border border-line px-5 py-4 font-semibold text-ink">
           Campus counsellor
         </button>
 
@@ -77,7 +79,7 @@ export default function Support({ current }: Props) {
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
               <div className="space-y-3 rounded-2xl bg-card-2 p-4 text-sm text-soft">
                 {counsellor ? (
-                  <a href={`tel:${counsellor.replace(/\s/g, "")}`} className="flex items-center gap-2 font-bold text-indigo">
+                  <a href={`tel:${counsellor.replace(/\s/g, "")}`} className="flex items-center gap-2 font-semibold text-indigo">
                     <PhoneIcon size={18} /> Call {counsellor}
                   </a>
                 ) : (
@@ -89,9 +91,9 @@ export default function Support({ current }: Props) {
             </motion.div>
           )}
         </AnimatePresence>
+        <p className="pt-4 text-xs text-faint">{copy.disclaimer}</p>
       </div>
-
-      <p className="mt-8 text-center text-xs text-faint">{copy.disclaimer}</p>
+      </div>
     </div>
   );
 }

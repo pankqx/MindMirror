@@ -24,6 +24,14 @@ npm start            # http://localhost:8787/health should say ok
 
 No key or no internet: `npm run mock` with `MOCK_AI=1`.
 
+## On a phone (installable app)
+
+1. Laptop and phone on the same Wi-Fi. On the laptop: `npm run phone` (builds, then serves on port 5173 to the network) and start the hub.
+2. On the phone, open `http://<laptop-ip>:5173` in Chrome. The app finds the hub on the same laptop by itself.
+3. Chrome menu → **Add to Home screen**. MindMirror opens full screen with its own icon, and still opens offline.
+
+Browsers only allow the microphone on `https` or `localhost`, so **Hold to talk works on the laptop**; on the phone use typed chat and the necklace.
+
 ## Demo on stage
 
 1. Start the hub, then the app. The top bar shows **Hub live** when they can talk.

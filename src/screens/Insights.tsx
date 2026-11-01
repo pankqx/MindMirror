@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowIcon } from "../components/Icons";
 import SignalCard from "../components/SignalCard";
-import { Card, item, list, SectionTitle, spring, TapCard } from "../components/ui";
+import { SignalGlyph } from "../components/Glyphs";
+import { Card, item, list, PageHeader, SectionTitle, spring, TapCard } from "../components/ui";
 import Weather from "../components/Weather";
 import { copy } from "../content/copy";
 import { db, localDate } from "../lib/db";
@@ -39,46 +40,55 @@ export default function Insights({ go }: { go: Go }) {
   const flagged = ins.signals.filter((s) => s.level === "watch" || s.level === "needs care").length;
 
   return (
-    <motion.div className="space-y-4" variants={list} initial="hidden" animate="show">
-      {ins.crisis && <motion.div variants={item}><UrgentHelp /></motion.div>}
+    <motion.div variants={list} initial="hidden" animate="show">
+      <PageHeader eyebrow="Insights" title={<>You, compared with <em className="italic">you</em>.</>}
+        lede="Your last 3 days against the 2 weeks before. Never against anyone else." />
+      {ins.crisis && <motion.div variants={item} className="mb-6"><UrgentHelp /></motion.div>}
 
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
+      <div className="space-y-6">
       <motion.div variants={item}>
         <Weather kind={ins.weather} title={ins.weatherTitle} message={w.line} />
       </motion.div>
 
-      <motion.p variants={item} className="px-1 text-sm text-soft">
+      <motion.p variants={item} className="text-[15px] leading-relaxed text-soft">
         {ins.signals.every((s) => s.level === "learning")
           ? "MindMirror is learning your normal. After 5 check-ins, each signal compares your last few days with your own usual."
-          : `${flagged === 0 ? "No signal" : flagged === 1 ? "One signal" : `${flagged} signals`} moved away from your usual. Your last 3 days are compared with the 2 weeks before. Tap a signal for one small thing to try.`}
+          : `${flagged === 0 ? "No signal" : flagged === 1 ? "One signal" : `${flagged} signals`} moved away from your usual. Tap a signal for one small thing to try.`}
       </motion.p>
 
+      </div>
+      <div>
       <motion.div variants={item}><SectionTitle>Your five signals</SectionTitle></motion.div>
       {ins.signals.map((s) => {
         const tips = copy.tips[s.key];
         return (
           <motion.div key={s.key} variants={item}>
-            <SignalCard name={s.name} icon={s.icon} level={s.level} proof={s.text}
+            <SignalCard name={s.name} icon={<SignalGlyph k={s.key} size={26} />} level={s.level} proof={s.text}
               series={seriesFor(s.key, checkins, today, 21)} baseline={s.key === "connection" ? null : s.baseline}
               tip={tips[dayIndex % tips.length]} />
           </motion.div>
         );
       })}
 
-      <motion.div variants={item}>
+      </div>
+      </div>
+
+      <motion.div variants={item} className="mt-10">
         <SectionTitle>Three weeks</SectionTitle>
-        <Card className="!p-4">
-          <div className="mb-3 grid grid-cols-4 gap-1 rounded-2xl bg-card-2 p-1">
+        <Card className="!p-4 lg:!p-6">
+          <div className="mb-4 grid grid-cols-4 gap-1 rounded-full bg-card-2 p-1 lg:max-w-md">
             {CHARTS.map((c) => (
               <button key={c.key} onClick={() => setChart(c.key)}
-                className={`relative min-h-10 rounded-xl text-sm font-bold ${chart === c.key ? "text-ink" : "text-faint"}`}>
-                {chart === c.key && <motion.span layoutId="chart-tab" transition={spring} className="absolute inset-0 rounded-xl bg-card shadow-soft" />}
+                className={`relative min-h-9 rounded-full text-[13px] font-medium ${chart === c.key ? "text-bg" : "text-soft"}`}>
+                {chart === c.key && <motion.span layoutId="chart-tab" transition={spring} className="absolute inset-0 rounded-full bg-ink" />}
                 <span className="relative">{c.label}</span>
               </button>
             ))}
           </div>
           {hasData ? (
             <motion.div key={chart} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={data} margin={{ left: -24, right: 8, top: 8 }}>
                   <defs>
                     <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
@@ -96,7 +106,7 @@ export default function Insights({ go }: { go: Go }) {
                     <ReferenceLine y={sig.baseline} stroke="var(--sage)" strokeDasharray="6 4" strokeWidth={2}
                       label={{ value: "your usual", fontSize: 10, fill: "var(--soft)", position: "insideTopRight" }} />
                   )}
-                  <Area type="monotone" dataKey="value" stroke="var(--indigo)" strokeWidth={2.5} fill="url(#fill)" connectNulls
+                  <Area type="monotone" dataKey="value" stroke="var(--indigo)" strokeWidth={2} fill="url(#fill)" connectNulls
                     dot={false} activeDot={{ r: 5 }} animationDuration={900} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -107,20 +117,20 @@ export default function Insights({ go }: { go: Go }) {
         </Card>
       </motion.div>
 
-      <motion.div variants={item} className="grid grid-cols-2 gap-3">
+      <motion.div variants={item} className="mt-6 grid grid-cols-2 gap-3">
         <TapCard onClick={() => go("support")} className="!p-4">
-          <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-faint">Step {ins.rung.step} of 4</span>
-          <span className="mt-1 block font-bold">{ins.rung.title}</span>
-          <span className="mt-2 flex items-center gap-1 text-sm font-bold text-indigo">Support <ArrowIcon size={16} /></span>
+          <span className="text-[13px] text-faint">Step {ins.rung.step} of 4</span>
+          <span className="mt-1 block font-display text-2xl">{ins.rung.title}</span>
+          <span className="mt-2 flex items-center gap-1 text-sm font-semibold text-indigo">Support <ArrowIcon size={16} /></span>
         </TapCard>
         <TapCard onClick={() => go("planner")} className="!p-4">
-          <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-faint">Pressure</span>
-          <span className="mt-1 block font-bold">Deadlines vs hours</span>
-          <span className="mt-2 flex items-center gap-1 text-sm font-bold text-indigo">Planner <ArrowIcon size={16} /></span>
+          <span className="text-[13px] text-faint">Pressure</span>
+          <span className="mt-1 block font-display text-2xl">Deadlines vs hours</span>
+          <span className="mt-2 flex items-center gap-1 text-sm font-semibold text-indigo">Planner <ArrowIcon size={16} /></span>
         </TapCard>
       </motion.div>
 
-      <motion.p variants={item} className="px-1 text-xs text-faint">
+      <motion.p variants={item} className="mt-8 text-xs text-faint">
         MindMirror shows changes against your own normal. It is not a medical device and does not diagnose.
       </motion.p>
     </motion.div>

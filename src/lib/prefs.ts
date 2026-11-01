@@ -64,7 +64,7 @@ export function resolvedTheme(): "light" | "dark" {
 export function applyTheme() {
   const t = resolvedTheme();
   document.documentElement.dataset.theme = t;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", t === "dark" ? "#12131b" : "#fbf7f0");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", t === "dark" ? "#111112" : "#f5f2ec");
 }
 
 media?.addEventListener("change", () => {

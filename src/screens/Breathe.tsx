@@ -78,21 +78,21 @@ export default function Breathe() {
           ))}
 
           <motion.div
-            className="relative grid h-44 w-44 place-items-center rounded-full bg-gradient-to-br from-sage to-indigo shadow-lg"
+            className="relative grid h-44 w-44 place-items-center rounded-full bg-indigo"
             animate={reducedMotion ? {} : { scale }}
             transition={{ duration: dur, ease: "easeInOut" }}
           >
             <AnimatePresence mode="wait">
               <motion.span key={running ? phase : "idle"} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="text-xl font-bold text-white">
-                {running ? (phase === "in" ? "Breathe in" : "Breathe out") : completed ? "🌿" : "Breathe"}
+                exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }} className="font-display text-3xl text-indigo-ink">
+                {running ? (phase === "in" ? "Breathe in" : "Breathe out") : completed ? "Done" : "Breathe"}
               </motion.span>
             </AnimatePresence>
           </motion.div>
         </div>
 
         {/* TIMER */}
-        <div className="mt-2 font-display text-4xl font-semibold tabular-nums text-indigo">
+        <div className="mt-2 font-display text-5xl tabular-nums text-ink">
           {Math.floor(secondsLeft / 60).toString().padStart(2, "0")}:{(secondsLeft % 60).toString().padStart(2, "0")}
         </div>
         <p className="mt-1 text-sm text-soft">
@@ -110,8 +110,8 @@ export default function Breathe() {
         <AnimatePresence>
           {completed && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mt-6 rounded-2xl bg-sage/20 p-4">
-              <h3 className="text-xl font-bold text-ink">Well done 🌿</h3>
+              className="mt-6 border-t border-line pt-5">
+              <h3 className="font-display text-3xl text-ink">Well done.</h3>
               <p className="mt-2 text-sm text-soft">You took a moment to slow down. Carry that calm with you.</p>
             </motion.div>
           )}

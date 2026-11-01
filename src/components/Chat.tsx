@@ -86,7 +86,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
       <div className="min-h-[38vh] space-y-3 pb-4">
         {messages.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="py-6 text-center">
-            <p className="font-display text-2xl font-semibold">What's on your mind?</p>
+            <p className="font-display text-4xl">What's on your mind?</p>
             <p className="mt-2 text-sm text-soft">I listen, reflect, and suggest one small step. I never diagnose.</p>
           </motion.div>
         )}
@@ -97,9 +97,9 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
               className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}
               style={{ transformOrigin: m.from === "me" ? "bottom right" : "bottom left" }}>
               <div className="max-w-[85%]">
-                <div className={`rounded-3xl px-4 py-3 text-[15px] leading-relaxed ${m.from === "me"
-                  ? "rounded-br-lg bg-indigo text-indigo-ink"
-                  : "rounded-bl-lg border border-line/70 bg-card text-ink shadow-soft"}`}>
+                <div className={m.from === "me"
+                  ? "rounded-3xl rounded-br-md bg-card-2 px-4 py-3 text-[15px] leading-relaxed text-ink"
+                  : "border-l-2 border-indigo py-1 pl-4 text-[17px] leading-relaxed text-ink"}>
                   {m.text}
                 </div>
                 {(m.via === "necklace" || m.note) && (
@@ -113,7 +113,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
           ))}
           {typing && (
             <motion.div key="typing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex">
-              <div className="rounded-3xl rounded-bl-lg border border-line/70 bg-card px-4 py-4 text-faint shadow-soft"><Dots /></div>
+              <div className="border-l-2 border-indigo py-2 pl-4 text-faint"><Dots /></div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -125,7 +125,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
         <div className="no-scrollbar -mx-5 mb-3 flex gap-2 overflow-x-auto px-5">
           {suggestions.map((s) => (
             <motion.button key={s} whileTap={{ scale: 0.95 }} onClick={() => handleSend(s)}
-              className="shrink-0 rounded-full border border-line bg-card px-4 py-2 text-sm font-semibold text-soft">
+              className="shrink-0 rounded-full border border-line px-4 py-2 text-[13px] font-medium text-soft hover:border-ink/30 hover:text-ink">
               {s}
             </motion.button>
           ))}
@@ -133,7 +133,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
       )}
 
       {/* INPUT AREA */}
-      <div className="sticky bottom-28 z-10 rounded-[1.75rem] border border-line/80 bg-card/90 p-2 shadow-soft backdrop-blur-xl">
+      <div className="sticky bottom-24 z-10 rounded-[1.75rem] border border-line bg-bg/90 p-2 backdrop-blur-xl lg:bottom-6">
         <div className="flex items-center gap-2">
           <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
@@ -142,7 +142,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
           <AnimatePresence>
             {input.trim() && (
               <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={spring}
-                onClick={() => handleSend()} aria-label="Send" className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo text-indigo-ink">
+                onClick={() => handleSend()} aria-label="Send" className="grid h-12 w-12 place-items-center rounded-full border border-line text-ink">
                 <SendIcon size={20} />
               </motion.button>
             )}
@@ -150,7 +150,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
           {/* HOLD TO TALK */}
           <motion.button type="button" onPointerDown={down} onPointerUp={up} onPointerCancel={up} onContextMenu={(e) => e.preventDefault()}
             animate={{ scale: hold === "listening" ? 1.12 : 1 }} transition={spring} aria-label="Hold to talk"
-            className={`relative grid h-12 w-12 shrink-0 touch-none select-none place-items-center rounded-2xl text-white ${hold === "listening" ? "bg-coral" : "bg-ink/90"}`}>
+            className={`relative grid h-12 w-12 shrink-0 touch-none select-none place-items-center rounded-full text-white ${hold === "listening" ? "bg-coral" : "bg-ink"}`}>
             <MicRing level={level} active={hold === "listening"} />
             <span className="relative text-bg">
               {hold === "speaking" ? <Wave bars={4} /> : hold === "thinking" ? <Dots /> : <MicIcon size={21} />}
@@ -159,7 +159,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
         </div>
         <AnimatePresence mode="wait">
           <motion.p key={label} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            className="px-3 pb-1 pt-1.5 text-center text-xs font-semibold text-faint">
+            className="px-3 pb-1 pt-1.5 text-center text-xs font-medium text-faint">
             {label}
           </motion.p>
         </AnimatePresence>

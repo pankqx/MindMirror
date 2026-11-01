@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { chime, shred as shredSound } from "./sound";
+import { LeafIcon } from "../components/Icons";
 
 // Merel's worry shredder. Write it down, feed it in, and watch it come out in strips
 // that fall and fade. Nothing is saved.
@@ -37,17 +38,17 @@ export default function WorryShredder() {
   };
 
   return (
-    <div className="w-full overflow-hidden rounded-[2rem] border border-line/70 bg-card p-6 text-center shadow-soft">
-      <h2 className="mb-1 font-display text-2xl font-semibold">Worry shredder</h2>
+    <div className="w-full overflow-hidden rounded-3xl border border-line p-6 text-center lg:p-10">
+      <h2 className="mb-1 font-display text-4xl">Worry shredder</h2>
 
       <AnimatePresence mode="wait">
         {stage === "done" ? (
           <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="py-8">
             <motion.div className="mx-auto mb-4 text-5xl" initial={{ y: 10, rotate: -10 }} animate={{ y: [10, -6, 0], rotate: 0 }} transition={{ duration: 0.8 }}>
-              🍃
+              <LeafIcon size={44} className="mx-auto text-sage-ink" strokeWidth={1.3} />
             </motion.div>
             <p className="mx-auto max-w-xs text-sage-ink">It's still real, but it's lighter in your hands now.</p>
-            <motion.button whileTap={{ scale: 0.95 }} onClick={reset} className="mt-6 rounded-full bg-indigo px-7 py-3 font-semibold text-indigo-ink">
+            <motion.button whileTap={{ scale: 0.95 }} onClick={reset} className="mt-6 rounded-full bg-ink px-7 py-3 font-semibold text-bg">
               Write another
             </motion.button>
           </motion.div>
@@ -73,7 +74,7 @@ export default function WorryShredder() {
             {/* the shredder */}
             <div className="relative z-10 mt-2 rounded-2xl bg-ink px-4 py-3 text-bg shadow-lg">
               <div className="mx-auto mb-2 h-1.5 w-[92%] rounded-full bg-black/60" />
-              <div className="flex items-center justify-between text-xs font-extrabold tracking-[0.2em]">
+              <div className="flex items-center justify-between text-xs font-semibold tracking-[0.2em]">
                 <span>SHREDDER</span>
                 <motion.span className="h-2 w-2 rounded-full" animate={{ background: stage === "write" ? "#8fb9a8" : ["#e8836b", "#f5c66b", "#e8836b"] }}
                   transition={{ duration: 0.4, repeat: stage === "write" ? 0 : Infinity }} />
@@ -99,7 +100,7 @@ export default function WorryShredder() {
               {stage === "write" && (
                 <div className="pt-6">
                   <motion.button whileTap={{ scale: 0.95 }} onClick={shred} disabled={!note.trim()}
-                    className="rounded-full bg-indigo px-8 py-3.5 font-semibold text-indigo-ink shadow-soft disabled:opacity-40">
+                    className="rounded-full bg-ink px-8 py-3.5 font-semibold text-bg disabled:opacity-30">
                     Shred it
                   </motion.button>
                 </div>

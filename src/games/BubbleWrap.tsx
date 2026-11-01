@@ -81,10 +81,10 @@ export default function BubbleWrap() {
   };
 
   return (
-    <div className="w-full overflow-hidden rounded-[2rem] bg-sage/35 p-5 text-center shadow-soft">
+    <div className="w-full overflow-hidden rounded-3xl bg-sage/30 p-5 text-center lg:p-8">
       <div className="mb-4 flex items-center justify-between text-sm">
         <p className="text-sage-ink">Pop slowly. Breathe out with each one.</p>
-        <motion.span key={count} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="rounded-full bg-card/70 px-3 py-1 font-bold tabular-nums text-sage-ink">
+        <motion.span key={count} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="rounded-full bg-card/70 px-3 py-1 font-semibold tabular-nums text-sage-ink">
           {count}/{COUNT}
         </motion.span>
       </div>
@@ -104,7 +104,7 @@ export default function BubbleWrap() {
       <AnimatePresence mode="wait">
         {allPopped ? (
           <motion.p key="done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="mt-5 font-display text-xl font-semibold text-sage-ink">
+            className="mt-5 font-display text-3xl text-sage-ink">
             All popped. Lighter?
           </motion.p>
         ) : (
@@ -115,7 +115,7 @@ export default function BubbleWrap() {
       </AnimatePresence>
 
       <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={resetGame}
-        className="mt-4 rounded-full bg-card px-5 py-3 text-sm font-semibold text-sage-ink shadow-soft">
+        className="mt-4 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-bg">
         {allPopped ? "Wrap a new sheet" : "Reset"}
       </motion.button>
     </div>

@@ -61,7 +61,7 @@ export function LiveToasts({ go, screen }: { go: Go; screen: Screen }) {
         {showThinking && (
           <motion.div key="thinking" layout initial={{ opacity: 0, y: -16, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="pointer-events-auto flex items-center gap-3 rounded-full border border-line bg-card px-4 py-2.5 text-sm font-bold text-indigo shadow-soft">
+            className="pointer-events-auto flex items-center gap-3 rounded-full border border-line bg-card px-4 py-2.5 text-sm font-semibold text-indigo shadow-soft">
             <NecklaceIcon size={18} />
             <span>Your necklace heard you. Thinking</span>
             <Dots />
@@ -72,7 +72,7 @@ export function LiveToasts({ go, screen }: { go: Go; screen: Screen }) {
             initial={{ opacity: 0, y: -16, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="pointer-events-auto w-full max-w-[480px] rounded-3xl border border-line bg-card p-4 text-left shadow-soft">
-            <div className="flex items-center justify-between text-xs font-extrabold uppercase tracking-[0.12em] text-faint">
+            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.12em] text-faint">
               <span className="flex items-center gap-1.5"><NecklaceIcon size={14} /> From your necklace, just now</span>
               {speaking && <span className="flex items-center gap-1.5 text-indigo"><SpeakerIcon size={14} /><Wave /></span>}
             </div>
