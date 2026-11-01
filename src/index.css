@@ -181,6 +181,17 @@ input[type="range"].mm-range::-moz-range-thumb {
   border: 3px solid var(--indigo);
 }
 
+/* rain in the mind-weather sky */
+@keyframes mm-rain {
+  0% { transform: translateY(-12px); opacity: 0; }
+  20% { opacity: 0.9; }
+  100% { transform: translateY(42px); opacity: 0; }
+}
+.mm-rain {
+  animation: mm-rain 1.2s ease-in infinite;
+  opacity: 0;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -1,6 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Chat, { type HoldState, type Message } from "../components/Chat";
 import { NecklaceIcon } from "../components/Icons";
 import { db } from "../lib/db";
@@ -92,6 +92,29 @@ export default function Companion() {
     }
   }
 
+  // On a laptop, hold the Space bar to talk (when you're not typing).
+  const keys = useRef({ holdStart, holdEnd });
+  keys.current = { holdStart, holdEnd };
+  useEffect(() => {
+    const typing = (e: KeyboardEvent) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+    const down = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat || typing(e)) return;
+      e.preventDefault();
+      void keys.current.holdStart();
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || typing(e)) return;
+      e.preventDefault();
+      void keys.current.holdEnd();
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
+
   const state: HoldState = hold !== "idle" ? hold : speaking ? "speaking" : "idle";
 
   return (
@@ -112,7 +135,7 @@ export default function Companion() {
             <motion.p key={`${online}-${thinking}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-soft">
               {thinking === "necklace" ? (
                 <span className="flex items-center gap-1.5 text-indigo"><NecklaceIcon size={14} /> Your necklace is talking to me…</span>
-              ) : online ? "Here with you. Type, hold the mic, or use your necklace."
+              ) : online ? "Here with you. Type, hold the mic (or Space), or use your necklace."
                 : online === false ? "Hub is off. I can still listen, with simple offline replies." : "Connecting…"}
             </motion.p>
           </AnimatePresence>

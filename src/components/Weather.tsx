@@ -94,11 +94,9 @@ export default function Weather({ kind, title, message, label = "Your mind weath
         {Array.from({ length: drops }, (_, i) => {
           const x = 80 + ((i * 37) % 170);
           return (
-            <motion.line key={`${kind}-${i}`} x1={x} x2={x - 4} y1={138} y2={150} strokeWidth="2.5" strokeLinecap="round"
-              stroke={kind === "storm" ? "#7f8cff" : "#7fa9c9"}
-              initial={{ y: -10, opacity: 0 }}
-              animate={reduced ? { opacity: 0.8 } : { y: [-10, 40], opacity: [0, 0.9, 0] }}
-              transition={{ duration: 1.1, repeat: Infinity, delay: (i * 0.17) % 1.1, ease: "easeIn" }} />
+            <line key={`${kind}-${i}`} x1={x} x2={x - 5} y1={132} y2={148} strokeWidth="2.5" strokeLinecap="round"
+              stroke={kind === "storm" ? "#7f8cff" : "#7fa9c9"} className={reduced ? "" : "mm-rain"}
+              style={{ animationDelay: `${((i * 0.23) % 1.2).toFixed(2)}s` }} />
           );
         })}
 
