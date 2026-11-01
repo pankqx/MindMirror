@@ -233,6 +233,8 @@ function broadcastAddresses() {
 export const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  // Lets the GitHub Pages copy of the app (https) reach this hub on localhost in Chrome.
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
   if (req.method === "OPTIONS") return send(res, 204, "");
   const url = new URL(req.url, "http://hub");
   try {
