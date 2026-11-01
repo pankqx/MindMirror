@@ -1,0 +1,13 @@
+{
+  "name": "mindmirror-hub",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env server.mjs",
+    "mock": "node --env-file-if-exists=.env server.mjs"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "msedge-tts": "^2.1.1"
+  }
+}
