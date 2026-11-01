@@ -1,17 +1,10 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { db, localDate } from "../lib/db";
-import { addDays, type Level } from "../lib/signals";
+import { addDays } from "../lib/signals";
 import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
-
-// Temporary pill colours; swap the card for Kishore's SignalCard when it lands.
-const PILL: Record<Level, string> = {
-  steady: "bg-[#8FB9A8] text-white",
-  watch: "bg-amber-400 text-[#2B2D42]",
-  "needs care": "bg-[#E8836B] text-white",
-  learning: "bg-gray-300 text-[#2B2D42]",
-};
+import SignalCard from "../components/SignalCard";
 
 export default function Insights() {
   const ins = useInsights();
@@ -35,15 +28,7 @@ export default function Insights() {
       </div>
 
       {ins.signals.map((s) => (
-        <div key={s.key} className="rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="font-semibold">{s.icon} {s.name}</p>
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${PILL[s.level]}`}>
-              {s.level === "learning" ? "learning your normal" : s.level}
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-gray-600">{s.text}</p>
-        </div>
+        <SignalCard key={s.key} name={s.name} icon={s.icon} level={s.level} proof={s.text} />
       ))}
 
       {sleep && sleep.length > 0 && (

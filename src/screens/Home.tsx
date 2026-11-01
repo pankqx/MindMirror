@@ -3,9 +3,9 @@ import { db } from "../lib/db";
 import { loadSample } from "../lib/sample";
 import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
+import Weather from "../components/Weather";
 import type { Go } from "../App";
 
-const WEATHER_ICON = { clear: "☀️", clouds: "⛅", rain: "\u{1F327}️", storm: "⛈️" };
 
 export default function Home({ go }: { go: Go }) {
   const ins = useInsights();
@@ -22,11 +22,8 @@ export default function Home({ go }: { go: Go }) {
       {ins?.crisis && <UrgentHelp />}
 
       {ins && (
-        <button onClick={() => go("insights")}
-          className="w-full rounded-2xl bg-white p-6 text-left shadow-sm">
-          <div className="text-6xl">{WEATHER_ICON[ins.weather]}</div>
-          <p className="mt-2 text-xl font-bold">{ins.weatherTitle}</p>
-          <p className="text-sm opacity-80">{ins.rung.title}: {ins.rung.action}</p>
+        <button onClick={() => go("insights")} className="block w-full text-left">
+          <Weather kind={ins.weather} title={ins.weatherTitle} message={`${ins.rung.title}: ${ins.rung.action}`} />
         </button>
       )}
 
@@ -50,7 +47,7 @@ export default function Home({ go }: { go: Go }) {
           ["breathe", "\u{1F32C}️", "Breathe"],
           ["play", "\u{1FAE7}", "Play"],
           ["support", "\u{1F91D}", "Support"],
-          ["planner", "\u{1F4C5}", "Planner"],
+          ["checkin", "\u{1F4DD}", "Check in"],
         ] as const).map(([to, icon, label]) => (
           <button key={to} onClick={() => go(to)} className="rounded-2xl bg-white p-4 shadow-sm min-h-11">
             <div className="text-2xl">{icon}</div>
