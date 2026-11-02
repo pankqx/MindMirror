@@ -18,7 +18,10 @@ type Recognition = {
 const SR = (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition })
   .SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition;
 
-export function useConversation() {
+/** `voice: false` keeps replies on screen only (the landing lets people choose). */
+export function useConversation(opts: { voice?: boolean } = {}) {
+  const voiceOn = useRef(opts.voice !== false);
+  useEffect(() => { voiceOn.current = opts.voice !== false; }, [opts.voice]);
   const speaking = useSpeaking();
   const [busy, setBusy] = useState<null | "listening" | "thinking">(null);
   const [heard, setHeard] = useState("");
@@ -51,12 +54,12 @@ export function useConversation() {
       if (res.crisis) setCrisis(true);
       setReply(r);
       setBusy(null);
-      await speakReply(r);
+      if (voiceOn.current) await speakReply(r);
     } catch {
       r = offlineReply(text);
       setReply(r);
       setBusy(null);
-      await speakWithBrowser(r);
+      if (voiceOn.current) await speakWithBrowser(r);
     }
   }, []);
 
