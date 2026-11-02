@@ -19,8 +19,9 @@ import Play from "./screens/Play";
 import Support from "./screens/Support";
 import Welcome from "./screens/Welcome";
 
-// The immersive rooms bring in 3D, so they load only when opened.
-const Landing = lazy(() => import("./immersive/Landing"));
+// The front page and the immersive rooms load only when opened (the rooms bring in 3D).
+const Landing = lazy(() => import("./screens/Landing"));
+const Dive = lazy(() => import("./immersive/Landing"));
 const VoiceMode = lazy(() => import("./immersive/VoiceMode"));
 const FaceMode = lazy(() => import("./immersive/FaceMode"));
 
@@ -99,10 +100,11 @@ export default function App() {
   if (IMMERSIVE.includes(screen)) {
     return (
       <MotionConfig reducedMotion="user">
-        <Suspense fallback={<div className="night fixed inset-0" />}>
+        <Suspense fallback={<div className={`fixed inset-0 ${screen === "landing" ? "bg-paper" : "night"}`} />}>
           <AnimatePresence mode="wait">
             <motion.div key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}>
               {screen === "landing" && <Landing go={go} />}
+              {screen === "dive" && <Dive go={go} />}
               {screen === "voice" && <VoiceMode go={go} />}
               {screen === "face" && <FaceMode go={go} />}
             </motion.div>
