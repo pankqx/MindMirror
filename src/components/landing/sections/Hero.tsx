@@ -9,7 +9,7 @@ import { Btn, Lines } from "../kit";
 import { ease, scrollToId, useMedia } from "../motion";
 import { Mandala } from "../Mandala";
 
-export function Hero({ onStart }: { onStart: () => void }) {
+export function Hero({ onPick }: { onPick: (to: "preview" | "checkin" | "voice") => void }) {
   const track = useRef<HTMLDivElement>(null);
   const lg = useMedia("(min-width: 1024px)");
   const reduce = useReducedMotion();
@@ -35,8 +35,10 @@ export function Hero({ onStart }: { onStart: () => void }) {
           </motion.p>
           <motion.div className="mt-8 flex flex-wrap gap-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.85, duration: 0.9, ease }}>
-            <Btn onClick={onStart}>{HERO.primary}</Btn>
-            <Btn tone="mist" onClick={() => scrollToId("companion")}>{HERO.secondary}</Btn>
+            {/* the same three ways in as the phone: look around, check in, or just talk */}
+            <Btn onClick={() => onPick("preview")}>Preview</Btn>
+            <Btn tone="mist" onClick={() => onPick("checkin")}>Check in</Btn>
+            <Btn tone="mist" onClick={() => onPick("voice")}>Voice mode</Btn>
           </motion.div>
         </motion.div>
 

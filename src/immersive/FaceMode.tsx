@@ -5,21 +5,18 @@ import type { Go } from "../lib/nav";
 import { usePrefs } from "../lib/prefs";
 import UrgentHelp from "../screens/UrgentHelp";
 import { BackPill, Cursor } from "./bits";
-import { createFace, type Face } from "./face3d";
 import { Spoken } from "./VoiceMode";
 import { InkCharacter } from "../character/InkCharacter";
 import { characters, type CharState, type Expression } from "../character/characters";
 
-type Who = "reenu" | "roman" | "mira";
+type Who = "reenu" | "roman";
 const WHO: { id: Who; label: string }[] = [
   { id: "reenu", label: "Reenu" },
   { id: "roman", label: "Roman" },
-  { id: "mira", label: "Mira" },
 ];
 const readWho = (): Who => {
   try {
-    const v = localStorage.getItem("mm-character");
-    return v === "roman" || v === "mira" ? v : "reenu";
+    return localStorage.getItem("mm-character") === "roman" ? "roman" : "reenu";
   } catch {
     return "reenu";
   }
@@ -60,17 +57,15 @@ function Moment({ m, i, mx, my }: { m: (typeof MOMENTS)[number]; i: number; mx: 
   );
 }
 
-/** Face to face with Mira. She looks at you, listens, thinks, and talks back. */
+/** Face to face with Reenu or Roman: an AI companion who listens like a therapist, remembers, and talks back. */
 export default function FaceMode({ go }: { go: Go }) {
-  const c = useConversation();
+  const [who, setWhoState] = useState<Who>(readWho);
+  const c = useConversation({ mode: "therapist", persona: who });
   const live = useRef(c);
   useLayoutEffect(() => { live.current = c; });
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const [ready, setReady] = useState<"loading" | "ok" | "fail">("loading");
   const [typing, setTyping] = useState(false);
   const [text, setText] = useState("");
   const { name } = usePrefs();
-  const [who, setWhoState] = useState<Who>(readWho);
   const [greeting, setGreeting] = useState(true);
   const setWho = (w: Who) => {
     setWhoState(w);
@@ -82,39 +77,21 @@ export default function FaceMode({ go }: { go: Go }) {
     const t = window.setTimeout(() => setGreeting(false), 2600);
     return () => window.clearTimeout(t);
   }, [greeting]);
-  const persona = who === "mira" ? null : characters[who];
+  const persona = characters[who];
   const inkState: CharState = greeting && c.phase === "idle" ? "GREETING" : STATE[c.phase];
   const expr: Expression = c.crisis ? "concerned" : c.phase === "idle" && c.reply ? "happy" : "neutral";
-  const displayName = persona?.name ?? "Mira";
+  const displayName = persona.name;
   const mx = useMotionValue(0), my = useMotionValue(0);
   const smx = useSpring(mx, { stiffness: 60, damping: 20 }), smy = useSpring(my, { stiffness: 60, damping: 20 });
 
   useEffect(() => {
-    let face: Face | null = null;
-    let raf = 0;
-    let dead = false;
     const onMove = (e: PointerEvent) => {
       mx.set((e.clientX / window.innerWidth) * 2 - 1);
       my.set((e.clientY / window.innerHeight) * 2 - 1);
     };
     window.addEventListener("pointermove", onMove);
-    if (who !== "mira" || !canvas.current) return () => window.removeEventListener("pointermove", onMove);
-    setReady("loading");
-    createFace(canvas.current, `${import.meta.env.BASE_URL}models/face.glb`)
-      .then((f) => {
-        if (dead) return f.dispose();
-        face = f;
-        setReady("ok");
-        const tick = () => {
-          const { phase, level } = live.current;
-          face?.update(phase, level());
-          raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-      })
-      .catch(() => setReady("fail"));
-    return () => { dead = true; cancelAnimationFrame(raf); face?.dispose(); window.removeEventListener("pointermove", onMove); };
-  }, [mx, my, who]);
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [mx, my]);
 
   // Space bar: hold to talk
   useEffect(() => {
@@ -160,7 +137,7 @@ export default function FaceMode({ go }: { go: Go }) {
 
       {/* Reenu or Roman, standing in a pool of warm light */}
       <AnimatePresence mode="wait">
-        {persona && (
+        {(
           <motion.div key={persona.id} className="pointer-events-none absolute inset-x-0 bottom-[118px] flex justify-center lg:bottom-[128px]"
             initial={{ opacity: 0, y: 40, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: 20, filter: "blur(10px)" }} transition={{ duration: 0.8, ease }}>
@@ -171,20 +148,6 @@ export default function FaceMode({ go }: { go: Go }) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Mira */}
-      {who === "mira" && <motion.canvas ref={canvas} className="absolute inset-0 h-full w-full" aria-label="Mira, a face made of light"
-        initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: ready === "ok" ? 1 : 0, scale: ready === "ok" ? 1 : 0.96 }} transition={{ duration: 1.6, ease }} />}
-      {who === "mira" && ready === "loading" && (
-        <div className="absolute inset-0 grid place-items-center">
-          <motion.span className="h-24 w-24 rounded-full border border-white/20" animate={{ scale: [1, 1.15, 1], opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.8, repeat: Infinity }} />
-        </div>
-      )}
-      {who === "mira" && ready === "fail" && (
-        <div className="absolute inset-0 grid place-items-center px-8 text-center text-soft">
-          This device can't draw Mira in 3D, but she can still listen and talk.
-        </div>
-      )}
 
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-5 lg:p-8">
         <BackPill onClick={() => go("landing")} />
@@ -204,9 +167,10 @@ export default function FaceMode({ go }: { go: Go }) {
 
       <motion.div className="pointer-events-none absolute inset-x-0 top-[124px] z-10 px-6 text-center lg:top-[96px]"
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 1, ease }}>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">AI companion and AI therapist · listens, remembers this talk</p>
         <h1 className="font-display text-[2.4rem] leading-none lg:text-[3.2rem]">{name ? `Hi ${name}, I'm ${displayName}.` : `Hi, I'm ${displayName}.`}</h1>
         <p className="mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-soft lg:text-[14px]">
-          {persona ? `${persona.tagline[0].toUpperCase()}${persona.tagline.slice(1)}.` : "A listener made of light."} Tell me anything; together we'll find one small next step.
+          {`${persona.tagline[0].toUpperCase()}${persona.tagline.slice(1)}.`} Tell me anything; together we'll find one small next step. It never diagnoses.
         </p>
       </motion.div>
 
@@ -257,7 +221,7 @@ export default function FaceMode({ go }: { go: Go }) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
           </button>
         </div>
-        <p className="text-[11px] text-faint">{displayName} is an AI companion, not a therapist. For real help: Tele-MANAS 14416.</p>
+        <p className="text-[11px] text-faint">{displayName} is an AI, not a licensed therapist or doctor. For a real person: Tele-MANAS 14416.</p>
       </div>
     </div>
   );

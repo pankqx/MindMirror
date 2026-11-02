@@ -28,6 +28,9 @@ const STT_MODEL = process.env.STT_MODEL || "whisper-large-v3-turbo";
 const CHAT_MODEL = process.env.CHAT_MODEL || "openai/gpt-oss-20b";
 const VOICE = process.env.TTS_VOICE || "en-IN-NeerjaNeural";
 const MOCK = process.env.MOCK_AI === "1"; // no internet needed: fixed transcript and reply
+// Optional: OpenRouter for the replies (Groq still does the listening). Cheap default model.
+const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || "";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 const RATE = 16000;
 
 // ---------- safety ----------
@@ -67,7 +70,46 @@ async function transcribe(audio, filename, type) {
   return ((await r.json()).text || "").trim();
 }
 
-async function companion(text, context = "") {
+// Reenu and Roman, face to face: AI companions who listen the way a good counsellor does.
+// Reenu is the therapist voice (warm, asks the second question); Roman is the calm friend.
+const PERSONAS = {
+  reenu: "You are Reenu: warm, curious, gentle. You listen like an experienced therapist and you always ask the second, deeper question.",
+  roman: "You are Roman: calm, steady, with a little dry, kind humour. You talk like a trusted friend who also listens like a therapist, and you keep it short.",
+};
+const therapistPrompt = (persona) => `${PERSONAS[persona] || PERSONAS.reenu}
+You are an AI companion and AI therapist-style listener inside MindMirror, for college students in India.
+Work like a good counsellor: reflect back what you heard in their own words, name the feeling gently,
+validate it, then ask ONE open question, or offer one small grounding or reframing idea (CBT-style) when it helps.
+Remember what the student said earlier in this conversation and refer back to it naturally.
+If the app's signals are given, you may mention one gently ("you've been sleeping less this week").
+You are an AI, not a licensed therapist or doctor: never diagnose, never name a disorder, never give medical advice.
+Reply in 1 to 3 short spoken sentences (under 55 words), plain warm words, no lists, no emojis.
+If they seem unsafe, gently point to Tele MANAS 14416.
+Return ONLY JSON: {"reply": string, "mood": "good"|"okay"|"low"|"stressed"|"tired",
+"signals": array of zero or more of "sleep","pressure","isolation","energy","motivation"}.`;
+
+// Short memory per conversation (face to face, voice mode), so Reenu and Roman remember what you said.
+const sessions = new Map();
+function remember(session, user, assistant) {
+  if (!session) return;
+  const h = sessions.get(session) || [];
+  h.push({ role: "user", content: user }, { role: "assistant", content: assistant });
+  sessions.set(session, h.slice(-12));
+  if (sessions.size > 50) sessions.delete(sessions.keys().next().value);
+}
+
+async function llm(endpoint, key, model, messages, extra = {}) {
+  const r = await fetch(endpoint, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...extra },
+    body: JSON.stringify({ model, temperature: 0.6, max_tokens: 400, messages }),
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!r.ok) throw new Error(`${model} ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return (await r.json()).choices?.[0]?.message?.content || "";
+}
+
+async function companion(text, context = "", { mode = "companion", persona = "reenu", session = "" } = {}) {
   if (isCrisis(text)) return { reply: CRISIS_REPLY, mood: "low", signals: [], crisis: true };
   if (MOCK) {
     return {
@@ -75,22 +117,26 @@ async function companion(text, context = "") {
       mood: "stressed", signals: ["sleep", "pressure"],
     };
   }
-  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: CHAT_MODEL,
-      temperature: 0.6,
-      max_completion_tokens: 400,
-      messages: [
-        { role: "system", content: SYSTEM + (context ? `\nWhat the app knows (use gently): ${context}` : "") },
-        { role: "user", content: text },
-      ],
-    }),
-  });
-  if (!r.ok) throw new Error(`chat ${r.status}: ${await r.text()}`);
-  const content = (await r.json()).choices?.[0]?.message?.content || "";
-  return parseReply(content);
+  const system = (mode === "therapist" ? therapistPrompt(persona) : SYSTEM) + (context ? `\nWhat the app knows (use gently): ${context}` : "");
+  const messages = [{ role: "system", content: system }, ...(sessions.get(session) || []), { role: "user", content: text }];
+
+  // OpenRouter first when its key is set, Groq as the backup (or the other way round).
+  const tries = [];
+  if (OPENROUTER_KEY) tries.push(() => llm("https://openrouter.ai/api/v1/chat/completions", OPENROUTER_KEY, OPENROUTER_MODEL, messages,
+    { "HTTP-Referer": "https://pankqx.github.io/MindMirror/", "X-Title": "MindMirror" }));
+  if (GROQ_KEY) tries.push(() => llm("https://api.groq.com/openai/v1/chat/completions", GROQ_KEY, CHAT_MODEL, messages));
+  let lastErr = new Error("no AI key: set OPENROUTER_API_KEY or GROQ_API_KEY in hub/.env");
+  for (const t of tries) {
+    try {
+      const out = parseReply(await t());
+      remember(session, text, out.reply);
+      return out;
+    } catch (e) {
+      lastErr = e;
+      console.warn(`[ai] ${e.message}`);
+    }
+  }
+  throw lastErr;
 }
 
 export function parseReply(content) {
@@ -201,7 +247,9 @@ async function handleTalk(req, res, url) {
   broadcast({ type: "thinking", source: fromNecklace ? "necklace" : "web" });
   const heard = await transcribe(audio, name, mime);
   const t1 = Date.now();
-  const out = heard ? await companion(heard) : { reply: "I couldn't hear that. Hold the button and try again?", mood: "okay", signals: [] };
+  const opts = { mode: url.searchParams.get("mode") || "companion", persona: url.searchParams.get("persona") || "reenu", session: (url.searchParams.get("session") || "").slice(0, 64) };
+  const context = (url.searchParams.get("context") || "").slice(0, 1500);
+  const out = heard ? await companion(heard, context, opts) : { reply: "I couldn't hear that. Hold the button and try again?", mood: "okay", signals: [] };
   const t2 = Date.now();
   const mp3 = await speakMp3(out.reply);
   const t3 = Date.now();
@@ -239,7 +287,12 @@ export const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://hub");
   try {
     if (req.method === "GET" && url.pathname === "/health") {
-      return send(res, 200, { ok: true, mock: MOCK, hasKey: Boolean(GROQ_KEY), chatModel: CHAT_MODEL, voice: VOICE });
+      return send(res, 200, {
+        ok: true, mock: MOCK, hasKey: Boolean(GROQ_KEY || OPENROUTER_KEY),
+        stt: MOCK || Boolean(GROQ_KEY), // can it turn speech into text?
+        chat: OPENROUTER_KEY ? `openrouter:${OPENROUTER_MODEL}` : GROQ_KEY ? `groq:${CHAT_MODEL}` : "none",
+        chatModel: CHAT_MODEL, voice: VOICE,
+      });
     }
     if (req.method === "GET" && url.pathname === "/events") {
       res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
@@ -249,8 +302,8 @@ export const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === "POST" && url.pathname === "/chat") {
-      const { text = "", context = "" } = JSON.parse((await readBody(req)).toString() || "{}");
-      return send(res, 200, await companion(String(text), String(context)));
+      const { text = "", context = "", mode = "companion", persona = "reenu", session = "" } = JSON.parse((await readBody(req)).toString() || "{}");
+      return send(res, 200, await companion(String(text), String(context).slice(0, 1500), { mode: String(mode), persona: String(persona), session: String(session).slice(0, 64) }));
     }
     if (req.method === "POST" && url.pathname === "/talk") return await handleTalk(req, res, url);
     if (req.method === "GET" && url.pathname.startsWith("/audio/")) {

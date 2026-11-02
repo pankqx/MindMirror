@@ -263,7 +263,7 @@ export default function Landing({ go }: { go: Go }) {
               <button onClick={() => void enter("face")} data-cursor="open"
                 className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 px-4 py-2 text-[13px] text-soft transition-colors hover:border-white/30 hover:text-ink">
                 <span className="text-[#ff9e80]"><FaceGlyph /></span>
-                or talk face to face with Mira
+                or talk face to face with Reenu or Roman
                 <span className="transition-transform group-hover:translate-x-1">→</span>
               </button>
             </motion.div>

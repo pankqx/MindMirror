@@ -164,7 +164,7 @@ export const SHOWCASE = {
     { id: "breathe", title: "Breathing", sub: "Breathe", to: "breathe", img: "breathe", status: "Live" },
     { id: "planner", title: "Planner", sub: "Planner", to: "planner", img: "planner", status: "Live" },
     { id: "voice", title: "Voice mode", sub: "For tired days", to: "voice", img: "voice", status: "Live" },
-    { id: "face", title: "Face to face", sub: "Mira, Reenu or Roman", to: "face", img: "face", status: "Prototype" },
+    { id: "face", title: "Face to face", sub: "Reenu or Roman, AI companion and therapist", to: "face", img: "face", status: "Prototype" },
     { id: "play", title: "Play room", sub: "Jelly, bubble wrap, let it go, koi pond", to: "play", img: "play", status: "Live" },
     { id: "support", title: "Support ladder", sub: "Real people, one tap away", to: "support", img: "support", status: "Live" },
   ] as Shot[],

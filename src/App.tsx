@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { CalendarIcon, ChartIcon, ChatIcon, CheckIcon, FaceIcon, GearIcon, HeartIcon, HomeIcon, PlayIcon, WaveIcon, WindIcon } from "./components/Icons";
+import { CalendarIcon, ChartIcon, CheckIcon, CloseIcon, FaceIcon, GearIcon, HeartIcon, HomeIcon, PlayIcon, WaveIcon, WindIcon } from "./components/Icons";
 import { LiveToasts } from "./components/LiveToasts";
 import { Settings } from "./components/Settings";
 import { HubStatus, ThemeButton, TopBar, Wordmark } from "./components/TopBar";
@@ -9,9 +9,6 @@ import { startSavingTurns, unlockAudio } from "./lib/hub";
 import { IMMERSIVE, TITLES, type Go, type Screen } from "./lib/nav";
 import { applyTheme, usePrefs } from "./lib/prefs";
 import { useInsights } from "./lib/useInsights";
-import { InkCharacter } from "./character/InkCharacter";
-import { characters } from "./character/characters";
-import { useCompanion } from "./lib/companion";
 import Breathe from "./screens/Breathe";
 import CheckIn from "./screens/CheckIn";
 import Companion from "./screens/Companion";
@@ -30,20 +27,28 @@ const FaceMode = lazy(() => import("./immersive/FaceMode"));
 
 export type { Go, Screen } from "./lib/nav";
 
+// The menu, in three quiet groups: your day, talking, and calming down.
 const TABS = [
+  { id: "checkin", label: "Check in", Icon: CheckIcon },
   { id: "home", label: "Home", Icon: HomeIcon },
   { id: "insights", label: "Insights", Icon: ChartIcon },
-  { id: "companion", label: "Talk", Icon: ChatIcon },
-  { id: "play", label: "Play", Icon: PlayIcon },
   { id: "support", label: "Support", Icon: HeartIcon },
 ] as const;
 
-const MORE = [
+const TALK = [
   { id: "voice", label: "Voice mode", Icon: WaveIcon },
   { id: "face", label: "Face to face", Icon: FaceIcon },
-  { id: "checkin", label: "Check in", Icon: CheckIcon },
+] as const;
+
+const CALM = [
   { id: "breathe", label: "Breathe", Icon: WindIcon },
+  { id: "play", label: "Play", Icon: PlayIcon },
   { id: "planner", label: "Planner", Icon: CalendarIcon },
+] as const;
+
+const GROUPS = [
+  { name: "Talk", items: TALK },
+  { name: "Calm", items: CALM },
 ] as const;
 
 function RailLink({ active, onClick, Icon, label }: { active: boolean; onClick: () => void; Icon: typeof HomeIcon; label: string }) {
@@ -58,27 +63,17 @@ function RailLink({ active, onClick, Icon, label }: { active: boolean; onClick: 
   );
 }
 
-/** Your companion, waiting at the foot of the rail: the head and shoulders of Reenu or Roman. */
-function RailCompanion({ go }: { go: Go }) {
-  const who = useCompanion() ?? "reenu";
-  const cfg = characters[who];
-  return (
-    <button onClick={() => go("companion")} className="group relative mb-3 block h-[132px] w-full overflow-hidden rounded-[6px] border border-line text-left"
-      aria-label={`Talk to ${cfg.name}`} style={{ ["--accent" as string]: cfg.accent }}>
-      <span className="absolute inset-0 bg-[radial-gradient(closest-side_at_70%_90%,var(--accent),transparent)] opacity-25 transition-opacity group-hover:opacity-40" aria-hidden="true" />
-      <span className="absolute -right-[58px] -top-[40px]" aria-hidden="true">
-        <InkCharacter config={cfg} state="IDLE" height={300} label={`${cfg.name} (illustration)`} />
-      </span>
-      <span className="relative block p-3">
-        <span className="t-caption-sm block text-soft">Your companion</span>
-        <span className="font-display mt-1 block text-[1.9rem] italic leading-none text-[var(--accent)]">{cfg.name}</span>
-        <span className="t-caption-sm mt-2 block text-ink">Talk →</span>
-      </span>
-    </button>
-  );
-}
 
 const TAB_IDS: Screen[] = TABS.map((t) => t.id);
+const MORE_IDS: Screen[] = [...TALK, ...CALM].map((t) => t.id);
+
+/** Four dots: "more". */
+const MoreGlyph = ({ size = 22, strokeWidth = 1.6 }: { size?: number; strokeWidth?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" aria-hidden="true">
+    <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+    <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+  </svg>
+);
 
 function screenFromHash(): Screen {
   const s = location.hash.replace("#/", "") as Screen;
@@ -89,6 +84,7 @@ function screenFromHash(): Screen {
 export default function App() {
   const [screen, setScreen] = useState<Screen>(screenFromHash);
   const [settings, setSettings] = useState(false);
+  const [more, setMore] = useState(false);
   const prefs = usePrefs();
   const go: Go = (s) => {
     if (s === screen) return window.scrollTo({ top: 0, behavior: "smooth" });
@@ -150,14 +146,17 @@ export default function App() {
             <RailLink key={id} active={screen === id} onClick={() => go(id)} Icon={Icon} label={label} />
           ))}
         </nav>
-        <p className="t-caption-sm mb-2 mt-8 flex items-center gap-2 px-3 text-faint"><span className="stitch-x inline-block h-[2px] w-5" aria-hidden="true" />Tools</p>
-        <nav className="space-y-0.5" aria-label="Tools">
-          {MORE.map(({ id, label, Icon }) => (
-            <RailLink key={id} active={screen === id} onClick={() => go(id)} Icon={Icon} label={label} />
-          ))}
-        </nav>
+        {GROUPS.map((g) => (
+          <div key={g.name}>
+            <p className="t-caption-sm mb-2 mt-7 flex items-center gap-2 px-3 text-faint"><span className="stitch-x inline-block h-[2px] w-5" aria-hidden="true" />{g.name}</p>
+            <nav className="space-y-0.5" aria-label={g.name}>
+              {g.items.map(({ id, label, Icon }) => (
+                <RailLink key={id} active={screen === id} onClick={() => go(id)} Icon={Icon} label={label} />
+              ))}
+            </nav>
+          </div>
+        ))}
         <div className="mt-auto pt-6">
-          <RailCompanion go={go} />
           <HubStatus go={go} wide />
           <div className="flex items-center gap-1">
             <ThemeButton />
@@ -197,13 +196,43 @@ export default function App() {
 
       <LiveToasts go={go} screen={screen} />
 
-      {/* phone: a flat tab bar on a hairline */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/90 pb-[max(env(safe-area-inset-bottom),6px)] backdrop-blur-xl lg:hidden" aria-label="Main">
+      {/* phone: four tabs and "More" for talking and calming down */}
+      <AnimatePresence>
+        {more && (
+          <motion.div key="more" className="fixed inset-0 z-40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <button className="absolute inset-0 bg-ink/30 backdrop-blur-sm" aria-label="Close" onClick={() => setMore(false)} />
+            <motion.div className="absolute inset-x-0 bottom-0 rounded-t-[18px] border-t border-line bg-bg px-5 pt-4 pb-[calc(84px+env(safe-area-inset-bottom))]"
+              initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }} transition={{ type: "spring", stiffness: 420, damping: 36 }}>
+              <div className="mx-auto max-w-[520px]">
+                <div className="flex items-center justify-between">
+                  <p className="t-caption-sm text-faint">More</p>
+                  <button onClick={() => setMore(false)} aria-label="Close" className="grid h-9 w-9 place-items-center text-soft"><CloseIcon size={18} /></button>
+                </div>
+                {GROUPS.map((g) => (
+                  <div key={g.name} className="mt-3">
+                    <p className="t-caption-sm mb-1 text-faint">{g.name}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {g.items.map(({ id, label, Icon }) => (
+                        <button key={id} onClick={() => { setMore(false); go(id); }}
+                          className={`flex flex-col items-center gap-2 rounded-[10px] border border-line py-4 text-[13px] ${screen === id ? "bg-card-2 text-ink" : "text-soft"}`}>
+                          <Icon size={22} />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-bg/90 pb-[max(env(safe-area-inset-bottom),6px)] backdrop-blur-xl lg:hidden" aria-label="Main">
         <div className="mx-auto grid max-w-[520px] grid-cols-5 px-2">
-          {TABS.map(({ id, label, Icon }) => {
-            const active = screen === id;
+          {[...TABS, { id: "more" as const, label: "More", Icon: MoreGlyph }].map(({ id, label, Icon }) => {
+            const active = id === "more" ? more || MORE_IDS.includes(screen) : screen === id && !more;
             return (
-              <button key={id} onClick={() => go(id)} aria-current={active ? "page" : undefined}
+              <button key={id} onClick={() => (id === "more" ? setMore((m) => !m) : (setMore(false), go(id)))} aria-current={active ? "page" : undefined}
                 className={`relative flex h-16 flex-col items-center justify-center gap-1.5 font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-[0.04em] transition-colors ${active ? "text-ink" : "text-faint"}`}>
                 {active && (
                   <motion.span layoutId="tab-mark" className="absolute top-0 h-[3px] w-8 rounded-full bg-indigo"
