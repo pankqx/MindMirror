@@ -22,7 +22,7 @@ export function Showcase({ go }: { go: Go }) {
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.9, ease, delay: (i % 2) * 0.1 }} aria-label={`${SHOWCASE.open} ${s.title}`}>
             <div className="relative aspect-[16/10] overflow-hidden rounded-[4px] bg-coal-deep ring-1 ring-white/10">
-              <img src={src(s.img)} alt={`MindMirror ${s.title} screen`} loading="lazy" decoding="async" width={1440} height={900}
+              <img src={src(s.img)} alt={`MindMirror ${s.title} screen`} loading="lazy" decoding="async" width={1200} height={750}
                 className="size-full object-cover object-top transition-transform duration-[1.2s] ease-(--ease-lp) group-hover:scale-[1.03]" />
               <span className="t-caption-sm absolute bottom-3 left-3 translate-y-2 rounded-[3px] bg-coal px-2 py-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:opacity-100">
                 {SHOWCASE.open} ↗

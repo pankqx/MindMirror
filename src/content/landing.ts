@@ -144,7 +144,7 @@ export const SHOWCASE = {
   title: "The actual app. Not a mockup.",
   body: "Every screen below is a capture of MindMirror running on three weeks of sample data. Open any of them; they're one click away.",
   shots: [
-    { id: "home", title: "Dashboard", sub: "Home", to: "home", img: "home", status: "Live" },
+    { id: "home", title: "Dashboard", sub: "Home, with the necklace card", to: "home", img: "home", status: "Live" },
     { id: "insights", title: "Insights and analytics", sub: "Insights", to: "insights", img: "insights", status: "Live" },
     { id: "checkin", title: "Emotional check-in", sub: "Check in", to: "checkin", img: "checkin", status: "Live" },
     { id: "companion", title: "AI companion", sub: "Talk", to: "companion", img: "companion", status: "Live" },
@@ -152,6 +152,8 @@ export const SHOWCASE = {
     { id: "planner", title: "Planner", sub: "Planner", to: "planner", img: "planner", status: "Live" },
     { id: "voice", title: "Voice mode", sub: "For tired days", to: "voice", img: "voice", status: "Live" },
     { id: "face", title: "Face to face", sub: "Mira, Reenu or Roman", to: "face", img: "face", status: "Prototype" },
+    { id: "play", title: "Play room", sub: "Jelly, bubble wrap, let it go, koi pond", to: "play", img: "play", status: "Live" },
+    { id: "support", title: "Support ladder", sub: "Real people, one tap away", to: "support", img: "support", status: "Live" },
   ] as Shot[],
   open: "Open",
 };
