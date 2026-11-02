@@ -1,12 +1,12 @@
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
-import { useEffect, useState } from "react";
-import { CalendarIcon, ChartIcon, ChatIcon, CheckIcon, GearIcon, HeartIcon, HomeIcon, PlayIcon, WindIcon } from "./components/Icons";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { CalendarIcon, ChartIcon, ChatIcon, CheckIcon, FaceIcon, GearIcon, HeartIcon, HomeIcon, PlayIcon, WaveIcon, WindIcon } from "./components/Icons";
 import { LiveToasts } from "./components/LiveToasts";
 import { Settings } from "./components/Settings";
 import { HubStatus, ThemeButton, TopBar, Wordmark } from "./components/TopBar";
 import { saveCheckIn } from "./lib/db";
 import { startSavingTurns, unlockAudio } from "./lib/hub";
-import { TITLES, type Go, type Screen } from "./lib/nav";
+import { IMMERSIVE, TITLES, type Go, type Screen } from "./lib/nav";
 import { applyTheme, usePrefs } from "./lib/prefs";
 import { useInsights } from "./lib/useInsights";
 import Breathe from "./screens/Breathe";
@@ -19,6 +19,11 @@ import Play from "./screens/Play";
 import Support from "./screens/Support";
 import Welcome from "./screens/Welcome";
 
+// The immersive rooms bring in 3D, so they load only when opened.
+const Landing = lazy(() => import("./immersive/Landing"));
+const VoiceMode = lazy(() => import("./immersive/VoiceMode"));
+const FaceMode = lazy(() => import("./immersive/FaceMode"));
+
 export type { Go, Screen } from "./lib/nav";
 
 const TABS = [
@@ -30,6 +35,8 @@ const TABS = [
 ] as const;
 
 const MORE = [
+  { id: "voice", label: "Voice mode", Icon: WaveIcon },
+  { id: "face", label: "Face to face", Icon: FaceIcon },
   { id: "checkin", label: "Check in", Icon: CheckIcon },
   { id: "breathe", label: "Breathe", Icon: WindIcon },
   { id: "planner", label: "Planner", Icon: CalendarIcon },
@@ -50,6 +57,7 @@ const TAB_IDS: Screen[] = TABS.map((t) => t.id);
 
 function screenFromHash(): Screen {
   const s = location.hash.replace("#/", "") as Screen;
+  if (!s) return "landing";
   return s in TITLES ? s : "home";
 }
 
@@ -88,13 +96,29 @@ export default function App() {
   const isTab = TAB_IDS.includes(screen);
   const back = () => (history.length > 1 ? history.back() : go("home"));
 
+  if (IMMERSIVE.includes(screen)) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <Suspense fallback={<div className="night fixed inset-0" />}>
+          <AnimatePresence mode="wait">
+            <motion.div key={screen} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}>
+              {screen === "landing" && <Landing go={go} />}
+              {screen === "voice" && <VoiceMode go={go} />}
+              {screen === "face" && <FaceMode go={go} />}
+            </motion.div>
+          </AnimatePresence>
+        </Suspense>
+      </MotionConfig>
+    );
+  }
+
   return (
     <MotionConfig reducedMotion="user">
       <AnimatePresence>{!prefs.welcomed && <Welcome key="welcome" />}</AnimatePresence>
 
       {/* laptop: a quiet side rail */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-line px-6 py-7 lg:flex">
-        <button onClick={() => go("home")} aria-label="Home" className="mb-10 text-left"><Wordmark /></button>
+        <button onClick={() => go("landing")} aria-label="Start" className="mb-10 text-left"><Wordmark /></button>
         <nav className="space-y-0.5" aria-label="Main">
           {TABS.map(({ id, label, Icon }) => (
             <RailLink key={id} active={screen === id} onClick={() => go(id)} Icon={Icon} label={label} />

@@ -10,9 +10,9 @@ type Pad = { x: number; y: number; r: number; rot: number; bob: number };
 
 const LIFE = 2800;
 
-export default function Ripples() {
+export default function Ripples({ forceNight = false }: { forceNight?: boolean }) {
   usePrefs();
-  const night = resolvedTheme() === "dark";
+  const night = forceNight || resolvedTheme() === "dark";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ripples = useRef<Ripple[]>([]);
   const [rain, setRain] = useState(false);
