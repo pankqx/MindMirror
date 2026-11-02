@@ -8,12 +8,24 @@ import { spring } from "./ui";
 // These screens draw their own big title, so the bar stays quiet.
 const OWN_TITLE: Screen[] = ["home", "checkin", "breathe", "play", "support", "insights", "companion", "planner"];
 
-/** The mark: a mirror (ring) holding its reflection (the filled half). */
+const TICKS = Array.from({ length: 18 }, (_, i) => (i / 18) * Math.PI * 2);
+
+/** The mark: one shisha. A small mirror, its glint, and the ring of stitches that holds it. */
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <circle cx="16" cy="16" r="13" fill="none" stroke="var(--ink)" strokeWidth="1.8" />
-      <path d="M16 6.5a9.5 9.5 0 0 1 0 19z" fill="var(--indigo)" />
+      <defs>
+        <linearGradient id="mm-logo-m" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fbfcfd" /><stop offset="0.45" stopColor="#cdd3da" /><stop offset="0.6" stopColor="#8e97a4" /><stop offset="1" stopColor="#e3e7ec" />
+        </linearGradient>
+      </defs>
+      {TICKS.map((a) => (
+        <line key={a} x1={16 + Math.cos(a) * 10.4} y1={16 + Math.sin(a) * 10.4} x2={16 + Math.cos(a) * 14.2} y2={16 + Math.sin(a) * 14.2}
+          stroke="var(--indigo)" strokeWidth="1.7" strokeLinecap="round" />
+      ))}
+      <circle cx="16" cy="16" r="10" fill="none" stroke="var(--indigo)" strokeWidth="1.3" />
+      <circle cx="16" cy="16" r="8.4" fill="url(#mm-logo-m)" stroke="var(--ink)" strokeWidth="0.8" />
+      <path d="M11.6 13.4a5.4 5.4 0 0 1 4.4-3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -22,7 +34,7 @@ export function Wordmark() {
   return (
     <span className="flex items-center gap-2.5">
       <Logo />
-      <span className="font-display text-[22px] leading-none text-ink">MindMirror</span>
+      <span className="text-[19px] font-medium leading-none tracking-[-0.03em] text-ink">MindMirror</span>
     </span>
   );
 }
@@ -36,7 +48,7 @@ export function HubStatus({ go, wide = false }: { go: Go; wide?: boolean }) {
   const color = speaking || thinking ? "var(--indigo)" : online ? "var(--sage)" : "var(--faint)";
   return (
     <button onClick={() => go("companion")} title={online ? "The laptop hub is running" : "Start the hub: cd hub, npm start"}
-      className="flex h-9 items-center gap-2 rounded-full px-2.5 text-[13px] font-medium text-soft hover:text-ink">
+      className="t-caption-sm flex h-9 items-center gap-2 rounded-[4px] px-2.5 text-soft hover:text-ink">
       <span className="relative flex h-2 w-2">
         {(online || thinking) && (
           <motion.span className="absolute inset-0 rounded-full" style={{ background: color }}
@@ -78,7 +90,7 @@ export function TopBar({ screen, onBack, onSettings, go }: { screen: Screen; onB
         <AnimatePresence mode="popLayout" initial={false}>
           {onBack ? (
             <motion.button key="back" onClick={onBack} aria-label="Back" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
-              whileTap={{ scale: 0.9 }} className="-ml-2 flex h-10 items-center gap-1 rounded-full pl-1.5 pr-3 text-sm font-medium text-soft hover:text-ink">
+              whileTap={{ scale: 0.9 }} className="t-caption-sm -ml-2 flex h-10 items-center gap-1 rounded-[4px] pl-1.5 pr-3 text-soft hover:text-ink">
               <BackIcon size={20} /> Back
             </motion.button>
           ) : (
@@ -88,7 +100,7 @@ export function TopBar({ screen, onBack, onSettings, go }: { screen: Screen; onB
             </motion.button>
           )}
         </AnimatePresence>
-        {!OWN_TITLE.includes(screen) && <span className="truncate font-display text-xl text-ink">{TITLES[screen]}</span>}
+        {!OWN_TITLE.includes(screen) && <span className="t-caption truncate text-ink">{TITLES[screen]}</span>}
       </div>
 
       <div className="flex items-center gap-0.5 lg:hidden">

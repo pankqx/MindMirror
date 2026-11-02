@@ -16,9 +16,9 @@ export function Experience() {
   const f = EXPERIENCE.features[active];
 
   return (
-    <section id="features" className="relative isolate overflow-x-clip bg-coal px-4 py-18 text-white lg:px-20 lg:py-40">
+    <div className="relative isolate overflow-x-clip bg-neel px-4 py-18 text-white lg:px-20 lg:py-40">
       <DotField label={EXPERIENCE.click} />
-      <div className="pointer-events-none absolute inset-0 -z-[5] bg-coal-deep/30" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 -z-[5] bg-neel-deep/30" aria-hidden="true" />
 
       <div className="grid grid-cols-1 gap-x-4 lg:grid-cols-12">
         <div className="lg:col-span-6">
@@ -31,13 +31,13 @@ export function Experience() {
             {EXPERIENCE.features.map((x, i) => (
               <motion.li key={x.n} className={`flex max-w-[560px] flex-col gap-3 lg:max-w-[50%] ${STEP[i % 3]}`}
                 onViewportEnter={() => setActive(i)} viewport={{ margin: "-48% 0px -48% 0px" }}>
-                <div className="mb-2 aspect-square w-32 border border-white/12 bg-coal/70 p-2 lg:hidden" aria-hidden="true">
+                <div className="mb-2 aspect-square w-32 border border-white/12 bg-neel/70 p-2 lg:hidden" aria-hidden="true">
                   <Figure i={i} />
                 </div>
                 <Fade y={10}>
                   <h3 className={`t-caption flex flex-wrap items-center gap-x-2 gap-y-1 transition-colors duration-500 ${active === i ? "text-white" : "lg:text-white/60"}`}>
                     <span>{x.n} / {x.title}</span>
-                    {x.status && <Chip className="bg-glow/15 text-glow">{x.status}</Chip>}
+                    {x.status && <Chip className="bg-rani/15 text-rani">{x.status}</Chip>}
                   </h3>
                   <p className="t-body mt-3 text-mist/70">{x.body}</p>
                 </Fade>
@@ -49,7 +49,7 @@ export function Experience() {
         {/* the plate */}
         <div className="hidden lg:col-span-5 lg:col-start-8 lg:block">
           <div className="sticky top-[calc(50svh-15rem)]">
-            <div className="border border-white/12 bg-coal/80 backdrop-blur-sm">
+            <div className="border border-white/12 bg-neel/80 backdrop-blur-sm">
               <div className="t-caption-sm flex items-center justify-between border-b border-white/12 px-4 py-3 text-white/50">
                 <span>Fig. {f.n}</span>
                 <span className="text-white/80">{f.title}</span>
@@ -64,13 +64,13 @@ export function Experience() {
               </div>
               <div className="flex gap-1 border-t border-white/12 px-4 py-3" aria-hidden="true">
                 {EXPERIENCE.features.map((x, i) => (
-                  <span key={x.n} className={`h-[3px] flex-1 transition-colors duration-500 ${i <= active ? "bg-glow" : "bg-white/12"}`} />
+                  <span key={x.n} className={`h-[3px] flex-1 transition-colors duration-500 ${i <= active ? "bg-rani" : "bg-white/12"}`} />
                 ))}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

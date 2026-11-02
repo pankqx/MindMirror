@@ -12,6 +12,9 @@ import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
 import { PageHeader } from "../components/ui";
 import { Logo } from "../components/TopBar";
+import { InkCharacter } from "../character/InkCharacter";
+import { characters, type CharState } from "../character/characters";
+import { setCompanion, useCompanion } from "../lib/companion";
 
 interface Msg extends Message { at: string }
 
@@ -109,9 +112,13 @@ export default function Companion() {
   }, []);
 
   const state: HoldState = hold !== "idle" ? hold : speaking ? "speaking" : "idle";
+  const who = useCompanion() ?? "reenu";
+  const cfg = characters[who];
+  const inkState: CharState = state === "listening" ? "LISTENING" : state === "speaking" ? "SPEAKING" : busy || thinking || state === "thinking" ? "THINKING" : "IDLE";
 
   return (
-    <div className="mx-auto max-w-[720px] space-y-4">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="min-w-0 space-y-4">
       {(crisis || ins?.crisis) && <UrgentHelp />}
 
       <PageHeader eyebrow="Companion" title={<>Talk it <em className="italic">out</em>.</>}
@@ -152,6 +159,23 @@ export default function Companion() {
           </motion.p>
         )}
       </AnimatePresence>
+    </div>
+
+    {/* your companion, listening while you type */}
+    <aside className="relative hidden lg:block" style={{ ["--accent" as string]: cfg.accent }}>
+      <div className="sticky top-8 flex flex-col items-center">
+        <div className="t-caption-sm mb-2 flex gap-1 self-end rounded-[4px] border border-line p-1" role="tablist" aria-label="Choose your companion">
+          {(["reenu", "roman"] as const).map((id) => (
+            <button key={id} role="tab" aria-selected={who === id} onClick={() => setCompanion(id)}
+              className={`rounded-[3px] px-2.5 py-1 transition-colors ${who === id ? "bg-ink text-bg" : "text-soft hover:text-ink"}`}>{characters[id].name}</button>
+          ))}
+        </div>
+        <span className="absolute bottom-0 h-1/2 w-full rounded-full bg-[radial-gradient(closest-side,var(--accent),transparent)] opacity-20" aria-hidden="true" />
+        <InkCharacter key={who} config={cfg} state={inkState} height="min(70vh, 640px)" className="relative" label={`${cfg.name}, your companion (illustration)`} />
+        <p className="font-display relative -mt-3 text-[3rem] italic leading-none text-[var(--accent)]">{cfg.name}</p>
+        <p className="t-caption-sm relative mt-2 text-center text-faint">{cfg.tagline}</p>
+      </div>
+    </aside>
     </div>
   );
 }

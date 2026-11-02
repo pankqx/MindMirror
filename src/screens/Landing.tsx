@@ -1,8 +1,6 @@
 // The front page (#/landing): an editorial walk through MindMirror, room by room.
-// Paper and coal sections alternate; every section lives in components/landing, every word in content/landing.
+// Khadi and neel rooms alternate and stack; every section lives in components/landing, every word in content/landing.
 
-import "@fontsource-variable/geist";
-import "@fontsource-variable/geist-mono";
 import { useEffect } from "react";
 import type { Go } from "../lib/nav";
 import { db } from "../lib/db";
@@ -15,6 +13,9 @@ import { BreathCard, DiveTile, HelpPill } from "../components/landing/Floating";
 import { Hero } from "../components/landing/sections/Hero";
 import { Problem } from "../components/landing/sections/Problem";
 import { Experience } from "../components/landing/sections/Experience";
+import { CompanionRoom } from "../components/landing/sections/CompanionRoom";
+import { Normal } from "../components/landing/sections/Normal";
+import { Room } from "../components/landing/Room";
 import { How } from "../components/landing/sections/How";
 import { Showcase } from "../components/landing/sections/Showcase";
 import { Privacy } from "../components/landing/sections/Privacy";
@@ -25,11 +26,11 @@ export default function Landing({ go }: { go: Go }) {
   const prefs = usePrefs();
   useLenis();
 
-  // the landing is always paper, whatever the app theme
+  // the landing is always khadi, whatever the app theme
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
     const before = meta?.getAttribute("content");
-    meta?.setAttribute("content", "#f1eee7");
+    meta?.setAttribute("content", "#f1ebdf");
     return () => { if (before) meta?.setAttribute("content", before); };
   }, []);
 
@@ -48,18 +49,20 @@ export default function Landing({ go }: { go: Go }) {
   };
 
   return (
-    <div className="lp relative min-h-screen overflow-x-clip bg-paper text-coal">
+    <div className="lp relative min-h-screen bg-neel-deep text-neel">
       <Nav onStart={start} />
       <DiveTile go={go} />
       <main>
-        <Hero onStart={start} />
-        <Problem />
-        <Experience />
-        <How onSample={() => void sample()} />
-        <Showcase go={go} />
-        <Privacy onStart={start} />
-        <Faq onStart={start} />
-        <Final onStart={start} />
+        <Room id="top" sink={false}><Hero onStart={start} /></Room>
+        <Room id="companion"><CompanionRoom onApp={start} /></Room>
+        <Room id="signals"><Problem /></Room>
+        <Room id="normal"><Normal /></Room>
+        <Room id="how"><How onSample={() => void sample()} /></Room>
+        <Room id="features"><Experience /></Room>
+        <Room id="insights"><Showcase go={go} /></Room>
+        <Room id="about"><Privacy onStart={start} /></Room>
+        <Room id="faq"><Faq onStart={start} /></Room>
+        <Room id="end"><Final onStart={start} /></Room>
       </main>
       <Footer go={go} />
       <BreathCard go={go} />

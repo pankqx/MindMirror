@@ -11,22 +11,22 @@ import { ease } from "./motion";
 export function DiveTile({ go }: { go: Go }) {
   return (
     <motion.button onClick={() => go("dive")} aria-label="Take the dive: the particle-field intro"
-      className="group fixed right-6 top-6 z-40 hidden aspect-video h-14 overflow-hidden rounded-[3px] bg-coal text-white ring-1 ring-white/10 lg:block"
+      className="group fixed right-6 top-6 z-40 hidden aspect-video h-14 overflow-hidden rounded-[3px] bg-neel text-white ring-1 ring-white/10 lg:block"
       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.8, ease }}>
       <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="lp-ring absolute size-20 rounded-full border border-glow" style={{ animationDelay: `${i * 0.8}s` }} />
+          <span key={i} className="lp-ring absolute size-20 rounded-full border border-rani" style={{ animationDelay: `${i * 0.8}s` }} />
         ))}
-        <span className="absolute size-1.5 rounded-full bg-glow" />
+        <span className="absolute size-1.5 rounded-full bg-rani" />
       </span>
-      <span className="t-caption-sm absolute bottom-1 left-1.5 text-[10px] text-white/80 transition-colors group-hover:text-glow">The dive ↗</span>
+      <span className="t-caption-sm absolute bottom-1 left-1.5 text-[10px] text-white/80 transition-colors group-hover:text-rani">The dive ↗</span>
     </motion.button>
   );
 }
 
 export function HelpPill() {
   return (
-    <a href="tel:14416" className="t-caption-sm fixed bottom-4 right-4 z-40 flex h-9 items-center gap-2 rounded-[3px] bg-coal px-3 text-white ring-1 ring-white/10 transition-colors hover:bg-black lg:bottom-6 lg:right-6"
+    <a href="tel:14416" className="t-caption-sm fixed bottom-4 right-4 z-40 flex h-9 items-center gap-2 rounded-[3px] bg-neel px-3 text-white ring-1 ring-white/10 transition-colors hover:bg-black lg:bottom-6 lg:right-6"
       aria-label="Need help now? Call Tele-MANAS on 14416, free, 24x7">
       <span className="size-1.5 rounded-full bg-[#ff6b5e]" aria-hidden="true" />
       Help now · 14416
@@ -64,7 +64,7 @@ export function BreathCard({ go }: { go: Go }) {
     <AnimatePresence>
       {show && !gone && (
         <motion.aside aria-label={BREATH_CARD.title}
-          className="fixed inset-x-4 bottom-16 z-40 flex flex-col gap-3 rounded-[8px] border border-white/20 bg-coal p-3 text-white sm:gap-4 sm:p-4 lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[400px] lg:p-5"
+          className="fixed inset-x-4 bottom-16 z-40 flex flex-col gap-3 rounded-[8px] border border-white/20 bg-neel p-3 text-white sm:gap-4 sm:p-4 lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[400px] lg:p-5"
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={{ duration: 0.5, ease }}>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -75,7 +75,7 @@ export function BreathCard({ go }: { go: Go }) {
               <svg width="12" height="12" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" /></svg>
             </button>
           </div>
-          <Btn tone="paper" onClick={() => { close(); go("breathe"); }}>{BREATH_CARD.cta}</Btn>
+          <Btn tone="khadi" onClick={() => { close(); go("breathe"); }}>{BREATH_CARD.cta}</Btn>
         </motion.aside>
       )}
     </AnimatePresence>

@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { ArrowIcon } from "../components/Icons";
-import { Logo } from "../components/TopBar";
+import { Shisha } from "../components/shisha/Shisha";
+import { THREAD } from "../components/shisha/palette";
 import { Button, ease } from "../components/ui";
 import { copy } from "../content/copy";
 import { unlockAudio } from "../lib/hub";
@@ -33,17 +34,11 @@ export default function Welcome() {
       exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.6, ease }}>
       <div className="relative mx-auto flex min-h-full max-w-[1040px] flex-col justify-center px-6 py-12 lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-20 lg:px-14">
         <div>
-        <motion.div className="mb-10 w-fit" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.9, ease }}>
-          <div className="relative grid place-items-center">
-            {[0, 1, 2].map((i) => (
-              <motion.span key={i} className="absolute h-16 w-16 rounded-full border border-indigo/40"
-                animate={{ scale: [1, 2.4], opacity: [0.6, 0] }} transition={{ duration: 4.5, repeat: Infinity, delay: i * 1.5, ease: "easeOut" }} />
-            ))}
-            <Logo size={64} />
-          </div>
+        <motion.div className="mb-8 w-fit" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.9, ease }}>
+          <Shisha size={112} petals={10} thread={THREAD.rani} accent={THREAD.kesar} follow draw title="A stitched mirror, MindMirror's mark" />
         </motion.div>
 
-        <motion.h1 className="font-display text-[3.4rem] leading-[1] lg:text-[5.2rem]" initial={{ opacity: 0, y: 16 }}
+        <motion.h1 className="text-[2.9rem] font-medium leading-[1] tracking-[-0.035em] lg:text-[4.4rem] [&_em]:font-display [&_em]:font-normal [&_em]:text-indigo" initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8, ease }}>
           Notice the <em className="italic">drift</em> before it becomes a storm.
         </motion.h1>
@@ -56,9 +51,9 @@ export default function Welcome() {
         <div>
         <div className="mt-10 lg:mt-0">
           {POINTS.map(([n, title, line], i) => (
-            <motion.div key={title} className="flex items-baseline gap-5 border-t border-line py-4"
+            <motion.div key={title} className="flex items-baseline gap-5 border-t border-dashed border-ink/20 py-4"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 + i * 0.12, duration: 0.6, ease }}>
-              <span className="font-display text-xl text-faint">{n}</span>
+              <span className="t-caption-sm text-faint">{n}</span>
               <div>
                 <p className="text-[15px] font-medium">{title}</p>
                 <p className="text-[14px] text-soft">{line}</p>
@@ -69,7 +64,7 @@ export default function Welcome() {
 
         <motion.div className="mt-8 space-y-3" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 0.6, ease }}>
           <input value={name} onChange={(e) => setName(e.target.value.slice(0, 30))} placeholder="What should we call you? (optional)"
-            className="min-h-12 w-full rounded-full border border-line bg-transparent px-5 outline-none focus:border-ink" />
+            className="min-h-12 w-full rounded-[4px] border border-ink/20 bg-card px-4 outline-none focus:border-indigo" />
           <Button onClick={() => void enter(true)} disabled={busy}>
             Explore with sample data <ArrowIcon size={18} />
           </Button>

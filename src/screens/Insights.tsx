@@ -14,6 +14,8 @@ import { seriesFor } from "../lib/series";
 import type { SignalKey } from "../lib/signals";
 import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
+import { Cloth } from "../components/shisha/Cloth";
+import { weave } from "../components/shisha/cloth";
 
 const CHARTS: { key: SignalKey; label: string; unit: string; domain: [number, number] }[] = [
   { key: "sleep", label: "Sleep", unit: "h", domain: [3, 10] },
@@ -56,6 +58,14 @@ export default function Insights({ go }: { go: Go }) {
           ? "MindMirror is learning your normal. After 5 check-ins, each signal compares your last few days with your own usual."
           : `${flagged === 0 ? "No signal" : flagged === 1 ? "One signal" : `${flagged} signals`} moved away from your usual. Tap a signal for one small thing to try.`}
       </motion.p>
+
+      <motion.div variants={item} className="on-neel rounded-[10px] bg-[#171b38] p-5 lg:p-6">
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <p className="t-caption-sm text-soft">Your cloth · last 21 days</p>
+          <p className="t-caption-sm text-faint">one mirror a day</p>
+        </div>
+        <Cloth days={weave(checkins, today, 21)} />
+      </motion.div>
 
       </div>
       <div>

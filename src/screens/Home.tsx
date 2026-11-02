@@ -14,6 +14,8 @@ import { loadSample } from "../lib/sample";
 import { streak } from "../lib/series";
 import { useInsights } from "../lib/useInsights";
 import UrgentHelp from "./UrgentHelp";
+import { Cloth } from "../components/shisha/Cloth";
+import { weave } from "../components/shisha/cloth";
 
 function greeting() {
   const h = new Date().getHours();
@@ -89,12 +91,23 @@ export default function Home({ go }: { go: Go }) {
               </button>
             ) : (
               <motion.button onClick={() => go("checkin")} whileTap={{ scale: 0.98 }} transition={spring}
-                className="group flex h-14 w-full items-center justify-between rounded-full bg-ink pl-6 pr-2 text-bg">
-                <span className="text-[15px] font-semibold">Check in <span className="font-normal opacity-60">· 30 seconds</span></span>
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-bg/15 transition-transform group-hover:translate-x-0.5"><ArrowIcon size={18} /></span>
+                className="group flex h-14 w-full items-center justify-between rounded-[4px] bg-ink pl-5 pr-2 text-bg transition-colors hover:bg-indigo hover:text-indigo-ink">
+                <span className="t-caption">Check in <span className="opacity-60">· 30 seconds</span></span>
+                <span className="grid h-10 w-10 place-items-center rounded-[3px] bg-bg/15 transition-transform group-hover:translate-x-0.5"><ArrowIcon size={18} /></span>
               </motion.button>
             )}
           </motion.div>
+
+          {/* this week, one mirror a day */}
+          {checkins && checkins.length > 0 && (
+            <motion.div variants={item} className="on-neel rounded-[10px] bg-[#171b38] p-4 lg:p-5">
+              <div className="t-caption-sm mb-2 flex justify-between text-soft">
+                <span>This week · one mirror a day</span>
+                <button onClick={() => go("insights")} className="text-faint hover:text-ink">Your cloth →</button>
+              </div>
+              <Cloth days={weave(checkins, today, 7)} />
+            </motion.div>
+          )}
 
           {/* necklace */}
           <motion.div variants={item}>

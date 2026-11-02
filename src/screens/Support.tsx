@@ -60,17 +60,17 @@ export default function Support({ current }: Props) {
       <div className="space-y-3 lg:sticky lg:top-10 lg:self-start">
         <p className="mb-4 font-display text-3xl leading-tight">Real people, <em className="italic">one tap</em> away.</p>
         <motion.a whileTap={{ scale: 0.97 }} transition={spring} href="tel:14416"
-          className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-ink px-5 py-4 text-center font-semibold text-bg">
+          className="t-caption flex min-h-14 items-center justify-center gap-2 rounded-[4px] bg-ink px-5 py-4 text-center text-bg">
           <PhoneIcon size={20} /> Call Tele-MANAS 14416 <span className="font-semibold opacity-75">· free, 24×7</span>
         </motion.a>
 
         <motion.a whileTap={{ scale: 0.97 }} transition={spring} href="tel:112"
-          className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-urgent px-5 py-4 text-center font-semibold text-white">
+          className="t-caption flex min-h-14 items-center justify-center gap-2 rounded-[4px] bg-urgent px-5 py-4 text-center text-white">
           <PhoneIcon size={20} /> Emergency 112
         </motion.a>
 
         <button onClick={() => setShowCounsellor((v) => !v)}
-          className="min-h-14 w-full rounded-full border border-line px-5 py-4 font-semibold text-ink">
+          className="t-caption min-h-14 w-full rounded-[4px] border border-ink/20 px-5 py-4 text-ink">
           Campus counsellor
         </button>
 
