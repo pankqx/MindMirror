@@ -14,8 +14,9 @@ export function DiveTile({ go }: { go: Go }) {
       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.8, ease }}>
       <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="lp-ring absolute size-16 rounded-full border border-dotted border-glow/70" style={{ animationDelay: `${i * 0.8}s` }} />
+          <span key={i} className="lp-ring absolute size-20 rounded-full border border-glow" style={{ animationDelay: `${i * 0.8}s` }} />
         ))}
+        <span className="absolute size-1.5 rounded-full bg-glow" />
       </span>
       <span className="t-caption-sm absolute bottom-1 left-1.5 text-[10px] text-white/80 transition-colors group-hover:text-glow">The dive ↗</span>
     </motion.button>
@@ -42,7 +43,12 @@ export function BreathCard({ go }: { go: Go }) {
 
   useEffect(() => {
     if (gone) return;
-    const on = () => setShow(window.scrollY > window.innerHeight * 2.2 && window.innerHeight + window.scrollY < document.body.scrollHeight - window.innerHeight * 1.5);
+    // offer it once the reader reaches the real screens, and put it away near the end
+    const on = () => {
+      const from = document.getElementById("insights")?.getBoundingClientRect().top ?? Infinity;
+      const to = document.getElementById("faq")?.getBoundingClientRect().top ?? Infinity;
+      setShow(from < window.innerHeight * 0.5 && to > window.innerHeight * 0.6);
+    };
     on();
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
@@ -57,7 +63,7 @@ export function BreathCard({ go }: { go: Go }) {
     <AnimatePresence>
       {show && !gone && (
         <motion.aside aria-label={BREATH_CARD.title}
-          className="fixed inset-x-4 bottom-16 z-40 flex flex-col gap-4 rounded-[8px] border border-white/20 bg-coal p-4 text-white lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[440px] lg:p-6"
+          className="fixed inset-x-4 bottom-16 z-40 flex flex-col gap-4 rounded-[8px] border border-white/20 bg-coal p-4 text-white lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[400px] lg:p-5"
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={{ duration: 0.5, ease }}>
           <div className="flex items-start justify-between gap-4">
             <div>
