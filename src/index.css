@@ -3,30 +3,31 @@
 @import "tailwindcss";
 
 /*
-  MindMirror look: ink on paper.
-  One serif for voice (Instrument Serif), one sans for reading (Inter), one accent (indigo).
-  Flat surfaces separated by hairlines, not shadows. Colour only carries meaning:
-  sage = steady, ochre = watch, coral = needs care, red = urgent help only.
+  MindMirror look: shisha, the mirror-work embroidery of Kutch.
+  Indigo (neel) ink on handspun cotton (khadi) by day; khadi thread on an indigo night.
+  Thread colours carry meaning and nothing else:
+  mehendi green = steady, haldi = watch, sindoor = needs care, red = urgent help only, rani pink = the one accent.
+  Geist for reading and headings, Geist Mono for labels, Instrument Serif italic for the human words.
   Every colour is a CSS variable, so the dark theme is a swap, not a rewrite.
 */
 :root {
-  --bg: #f5f2ec;
-  --bg-2: #efebe3;
-  --card: #fbfaf7;
-  --card-2: #efebe3;
-  --ink: #1c1c1e;
-  --soft: #5c5b58;
-  --faint: #95928b;
-  --line: #e2ddd3;
-  --indigo: #3b45b8;
-  --indigo-ink: #fbfaf7;
-  --sage: #7fa894;
-  --sage-ink: #2e5243;
-  --coral: #d9785f;
-  --coral-ink: #8f3f2b;
-  --sun: #d9a441;
-  --sun-ink: #7a5610;
-  --sky: #9dbbd6;
+  --bg: #f1ebdf;
+  --bg-2: #e8e0d0;
+  --card: #f7f2e9;
+  --card-2: #e9e1d2;
+  --ink: #171b38;
+  --soft: #575468;
+  --faint: #918b80;
+  --line: #ddd4c3;
+  --indigo: #b8336a;
+  --indigo-ink: #fff8f0;
+  --sage: #6f8f3f;
+  --sage-ink: #3f5a20;
+  --coral: #cc5a3d;
+  --coral-ink: #8f2f1a;
+  --sun: #d9a42c;
+  --sun-ink: #7a5a0d;
+  --sky: #7c93c9;
   --urgent: #c8372d;
   --shadow: 0 0 0 0 transparent;
   --glow-a: transparent;
@@ -36,23 +37,23 @@
 
 :root[data-theme="dark"],
 .night {
-  --bg: #111112;
-  --bg-2: #18181a;
-  --card: #18181a;
-  --card-2: #222225;
-  --ink: #ecebe7;
-  --soft: #a9a7a1;
-  --faint: #6f6d68;
-  --line: #2a2a2d;
-  --indigo: #a9b0ff;
-  --indigo-ink: #111112;
-  --sage: #8dbba6;
-  --sage-ink: #b9dccb;
-  --coral: #e99580;
-  --coral-ink: #f3b7a6;
-  --sun: #e2b65e;
-  --sun-ink: #f0d08e;
-  --sky: #7d9cbd;
+  --bg: #12162f;
+  --bg-2: #181d3c;
+  --card: #1a1f40;
+  --card-2: #232951;
+  --ink: #efe8da;
+  --soft: #b4afc4;
+  --faint: #7d7a91;
+  --line: #2a3058;
+  --indigo: #e46a9a;
+  --indigo-ink: #12162f;
+  --sage: #9dbb6e;
+  --sage-ink: #c4dba0;
+  --coral: #ec8c6c;
+  --coral-ink: #f6b39d;
+  --sun: #ecc155;
+  --sun-ink: #f4d68e;
+  --sky: #8fa6dc;
   --urgent: #ff6b5e;
   --shadow: 0 0 0 0 transparent;
   --glow-a: transparent;
@@ -80,12 +81,12 @@
   --color-sky: var(--sky);
   --color-urgent: var(--urgent);
   --color-cream: var(--bg);
-  --font-nunito: "Inter", system-ui, sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-nunito: "Geist Variable", "Inter", system-ui, sans-serif;
+  --font-sans: "Geist Variable", "Inter", system-ui, sans-serif;
   --font-display: "Instrument Serif", Georgia, serif;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 0.875rem;
-  --radius-3xl: 1.125rem;
+  --radius-xl: 0.375rem;
+  --radius-2xl: 0.5rem;
+  --radius-3xl: 0.625rem;
   --shadow-soft: var(--shadow);
 }
 
@@ -104,9 +105,8 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Inter", system-ui, sans-serif;
-  font-feature-settings: "cv11", "ss01";
-  letter-spacing: -0.006em;
+  font-family: "Geist Variable", "Inter", system-ui, sans-serif;
+  letter-spacing: -0.003em;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -229,8 +229,8 @@ input[type="range"].mm-range::-moz-range-thumb {
 
 /* Immersive rooms (landing, voice, face to face): always night, whatever the app theme. */
 .night {
-  --bg: #060609;
-  background: #060609;
+  --bg: #0b0e22;
+  background: #0b0e22;
   color: var(--ink);
 }
 .mm-glass {
@@ -265,23 +265,31 @@ input[type="range"].mm-range::-moz-range-thumb {
 }
 
 /*
-  Landing page (#/landing): an editorial system of its own.
-  Paper and coal rooms that alternate, one sans for voice (Geist 500), one mono for labels (Geist Mono, uppercase).
+  Landing page (#/landing): the same shisha system at full volume.
+  Khadi and neel rooms that alternate and stack over each other as you scroll.
   Both fonts are bundled (fontsource), so the landing looks right offline too.
   Fixed colours on purpose: the landing looks the same whatever the app theme is.
   Type sizes are fluid between a 375px and a 1600px screen.
 */
 @theme {
-  --color-paper: #f1eee7;
-  --color-coal: #232323;
-  --color-coal-deep: #000000;
-  --color-stone: #5b5a56;
-  --color-ash: #cbcbcb;
-  --color-mist: #dedede;
-  --color-glow: #a9b0ff;
-  --color-glow-ink: #3b45b8;
+  --color-khadi: #f1ebdf;
+  --color-khadi-2: #e6dfd0;
+  --color-neel: #171b38;
+  --color-neel-2: #20264a;
+  --color-neel-deep: #0d1026;
+  --color-stone: #6a6458;
+  --color-ash: #cfc6b4;
+  --color-mist: #e6dfd0;
+  --color-rani: #e46a9a;
+  --color-rani-ink: #b8336a;
+  --color-kesar: #e58a2e;
+  --color-haldi: #e2b23a;
+  --color-mehendi: #6f8f3f;
+  --color-sindoor: #c9442e;
+  --color-shisha: #dfe3e8;
   --font-geist: "Geist Variable", "Inter", system-ui, sans-serif;
   --font-geist-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Instrument Serif", Georgia, serif;
   --ease-lp: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -293,11 +301,11 @@ input[type="range"].mm-range::-moz-range-thumb {
   -webkit-font-smoothing: antialiased;
 }
 .lp ::selection {
-  background: var(--color-glow);
-  color: var(--color-coal);
+  background: var(--color-rani);
+  color: var(--color-neel);
 }
 .lp :focus-visible {
-  outline: 2px solid var(--color-glow);
+  outline: 2px solid var(--color-rani);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -365,4 +373,24 @@ input[type="range"].mm-range::-moz-range-thumb {
 }
 @media (prefers-reduced-motion: reduce) {
   .lp-ring, .lp-ticker, .lp-ping { animation: none; }
+}
+
+/* running stitch: a dashed thread, used instead of plain hairlines where a seam means something */
+@utility stitch-x {
+  background-image: repeating-linear-gradient(90deg, currentColor 0 7px, transparent 7px 12px);
+  background-size: 100% 1.5px;
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+@utility stitch-y {
+  background-image: repeating-linear-gradient(180deg, currentColor 0 7px, transparent 7px 12px);
+  background-size: 1.5px 100%;
+  background-repeat: no-repeat;
+  background-position: 50% 0;
+}
+/* faint woven texture for the khadi surfaces */
+.weave {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(23, 27, 56, 0.018) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(23, 27, 56, 0.022) 0 1px, transparent 1px 4px);
 }
