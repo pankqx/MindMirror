@@ -48,12 +48,20 @@ export default function Landing({ go }: { go: Go }) {
     go("home");
   };
 
+  /** The three ways in, same as the phone. */
+  const pick = (to: "preview" | "checkin" | "voice") => {
+    if (to === "preview") return void sample();
+    unlockAudio();
+    if (!prefs.welcomed) setPrefs({ welcomed: true });
+    go(to);
+  };
+
   return (
     <div className="lp relative min-h-screen bg-neel-deep text-neel">
       <Nav onStart={start} />
       <DiveTile go={go} />
       <main>
-        <Room id="top" sink={false}><Hero onStart={start} /></Room>
+        <Room id="top" sink={false}><Hero onPick={pick} /></Room>
         <Room id="companion"><CompanionRoom onApp={start} /></Room>
         <Room id="signals"><Problem /></Room>
         <Room id="normal"><Normal /></Room>

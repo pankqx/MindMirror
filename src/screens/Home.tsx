@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { motion } from "framer-motion";
 import { SignalGlyph } from "../components/Glyphs";
-import { ArrowIcon, CalendarIcon, ChatIcon, CheckIcon, NecklaceIcon, PlayIcon, WindIcon } from "../components/Icons";
+import { ArrowIcon, CheckIcon, FaceIcon, NecklaceIcon, WaveIcon, WindIcon } from "../components/Icons";
 import { Dots } from "../components/LiveToasts";
 import Weather from "../components/Weather";
 import { item, list, PageHeader, SectionTitle, spring } from "../components/ui";
@@ -162,11 +162,10 @@ export default function Home({ go }: { go: Go }) {
           )}
 
           <motion.div variants={item} className="mt-8">
-            <SectionTitle>Feel a little lighter</SectionTitle>
+            <SectionTitle>Talk it out</SectionTitle>
+            <Row onClick={() => go("face")} icon={<FaceIcon size={19} />} title="Face to face with Mira" meta="AI therapist: listens, remembers, knows your signals" />
+            <Row onClick={() => go("voice")} icon={<WaveIcon size={19} />} title="Voice mode" meta="Just talk, by phone or necklace" />
             <Row onClick={() => go("breathe")} icon={<WindIcon size={19} />} title="Breathe" meta="One minute, 4 in and 6 out" />
-            <Row onClick={() => go("play")} icon={<PlayIcon size={19} />} title="Play room" meta="Pop, shred, ripple" />
-            <Row onClick={() => go("companion")} icon={<ChatIcon size={19} />} title="Talk it out" meta="Type, or hold to talk" />
-            <Row onClick={() => go("planner")} icon={<CalendarIcon size={19} />} title="Planner" meta="Deadlines against hours" />
           </motion.div>
         </div>
       </div>

@@ -3,9 +3,11 @@
 // Hub off: the browser listens (where it can) and answers with kind offline replies.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { chat, hubOnline, onHubEvent, outputLevel, speakReply, speakWithBrowser, startTalk, stopSpeaking, unlockAudio, useSpeaking, type Talk } from "./hub";
+import { chat, hubHealth, onHubEvent, outputLevel, speakReply, speakWithBrowser, startTalk, stopSpeaking, unlockAudio, useSpeaking, type Talk } from "./hub";
 import { offlineReply } from "./offline";
 import { isCrisis } from "./support";
+import { contextFor } from "./signals";
+import { useInsights } from "./useInsights";
 
 export type Phase = "idle" | "listening" | "thinking" | "speaking";
 
@@ -18,10 +20,17 @@ type Recognition = {
 const SR = (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition })
   .SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition;
 
-/** `voice: false` keeps replies on screen only (the landing lets people choose). */
-export function useConversation(opts: { voice?: boolean } = {}) {
+/** `voice: false` keeps replies on screen only (the landing lets people choose).
+ *  `mode: "therapist"` is Mira face to face: a counsellor's way of listening, with memory of this conversation. */
+export function useConversation(opts: { voice?: boolean; mode?: "companion" | "therapist" } = {}) {
   const voiceOn = useRef(opts.voice !== false);
   useEffect(() => { voiceOn.current = opts.voice !== false; }, [opts.voice]);
+  // one conversation = one session on the hub, so the AI remembers what was said
+  const session = useRef(Math.random().toString(36).slice(2, 12));
+  const ins = useInsights();
+  const context = useRef("");
+  useEffect(() => { context.current = ins ? contextFor(ins) : ""; }, [ins]);
+  const talkOpts = () => ({ mode: opts.mode ?? "companion", session: session.current, context: context.current });
   const speaking = useSpeaking();
   const [busy, setBusy] = useState<null | "listening" | "thinking">(null);
   const [heard, setHeard] = useState("");
@@ -49,7 +58,7 @@ export function useConversation(opts: { voice?: boolean } = {}) {
     if (isCrisis(text)) setCrisis(true);
     let r: string;
     try {
-      const res = await chat(text);
+      const res = await chat(text, context.current, talkOpts());
       r = res.reply;
       if (res.crisis) setCrisis(true);
       setReply(r);
@@ -68,9 +77,11 @@ export function useConversation(opts: { voice?: boolean } = {}) {
     stopSpeaking();
     setError("");
     if (busy) return;
-    if (await hubOnline()) {
+    const health = await hubHealth();
+    // The hub listens when it has a speech-to-text key; otherwise the browser listens and the hub only answers.
+    if (health && health.stt !== false) {
       try {
-        talk.current = await startTalk();
+        talk.current = await startTalk(talkOpts());
         micLevel.current = talk.current.level;
         setBusy("listening");
         return;
@@ -80,7 +91,7 @@ export function useConversation(opts: { voice?: boolean } = {}) {
       }
     }
     if (!SR) {
-      setError("The hub is off and this browser can't listen. Type below instead.");
+      setError(health ? "This browser can't listen here. Use Chrome, or type below." : "The hub is off and this browser can't listen. Type below instead.");
       return;
     }
     const r = new SR();

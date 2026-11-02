@@ -62,7 +62,7 @@ function Moment({ m, i, mx, my }: { m: (typeof MOMENTS)[number]; i: number; mx: 
 
 /** Face to face with Mira. She looks at you, listens, thinks, and talks back. */
 export default function FaceMode({ go }: { go: Go }) {
-  const c = useConversation();
+  const c = useConversation({ mode: "therapist" });
   const live = useRef(c);
   useLayoutEffect(() => { live.current = c; });
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -204,9 +204,10 @@ export default function FaceMode({ go }: { go: Go }) {
 
       <motion.div className="pointer-events-none absolute inset-x-0 top-[124px] z-10 px-6 text-center lg:top-[96px]"
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 1, ease }}>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">AI therapist · listens like a counsellor, remembers this talk</p>
         <h1 className="font-display text-[2.4rem] leading-none lg:text-[3.2rem]">{name ? `Hi ${name}, I'm ${displayName}.` : `Hi, I'm ${displayName}.`}</h1>
         <p className="mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-soft lg:text-[14px]">
-          {persona ? `${persona.tagline[0].toUpperCase()}${persona.tagline.slice(1)}.` : "A listener made of light."} Tell me anything; together we'll find one small next step.
+          {persona ? `${persona.tagline[0].toUpperCase()}${persona.tagline.slice(1)}.` : "A listener made of light."} Tell me anything; together we'll find one small next step. Not a doctor; it never diagnoses.
         </p>
       </motion.div>
 

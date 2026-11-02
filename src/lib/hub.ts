@@ -57,6 +57,18 @@ export async function hubOnline(): Promise<boolean> {
   }
 }
 
+export interface Health { ok: boolean; stt?: boolean; chat?: string }
+
+/** What the hub can do right now: listen (stt) and which AI answers. null = hub off. */
+export async function hubHealth(): Promise<Health | null> {
+  try {
+    const r = await fetch(`${HUB}/health`, { signal: AbortSignal.timeout(2000) });
+    return r.ok ? ((await r.json()) as Health) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Polls /health every 5 s. null = still checking. */
 export function useHubOnline(): boolean | null {
   const [online, setOnline] = useState<boolean | null>(null);
@@ -79,11 +91,13 @@ export function useHubOnline(): boolean | null {
 // ---------- chat ----------
 
 /** Typed chat. `context` = proof sentences of signals that need attention. */
-export async function chat(text: string, context = ""): Promise<Reply> {
+export interface TalkOpts { mode?: "companion" | "therapist"; session?: string; context?: string }
+
+export async function chat(text: string, context = "", opts: TalkOpts = {}): Promise<Reply> {
   const r = await fetch(`${HUB}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, context }),
+    body: JSON.stringify({ text, context, mode: opts.mode, session: opts.session }),
     signal: AbortSignal.timeout(20000),
   });
   if (!r.ok) throw new Error(`hub ${r.status}`);
@@ -301,7 +315,7 @@ export interface Talk {
 }
 
 /** Same hub, same AI as the necklace. The reply plays in the browser. */
-export async function startTalk(): Promise<Talk> {
+export async function startTalk(opts: TalkOpts = {}): Promise<Talk> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
   const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
   const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
@@ -340,7 +354,8 @@ export async function startTalk(): Promise<Talk> {
       await finish();
       if (Date.now() - started < 500) throw new Error("too short");
       const type = rec.mimeType || "audio/webm";
-      const r = await fetch(`${HUB}/talk?src=web`, {
+      const q = new URLSearchParams({ src: "web", mode: opts.mode ?? "companion", session: opts.session ?? "", context: (opts.context ?? "").slice(0, 1500) });
+      const r = await fetch(`${HUB}/talk?${q}`, {
         method: "POST",
         headers: { "Content-Type": type.split(";")[0] },
         body: new Blob(parts, { type }),
