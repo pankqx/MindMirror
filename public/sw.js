@@ -2,7 +2,7 @@
 // Pages: network first, cached copy if offline. App files and fonts: cache first.
 // The hub (port 8787) is never cached: it is live AI and voice.
 
-const CACHE = "mindmirror-v1";
+const CACHE = "mindmirror-v2";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./manifest.webmanifest", "./favicon.svg"])));
@@ -23,8 +23,9 @@ self.addEventListener("fetch", (e) => {
   if (!sameOrigin && !font) return; // hub and anything else: straight to the network
 
   if (req.mode === "navigate") {
+    // always ask the server for the page (no HTTP cache), so a new deploy shows on the next visit
     e.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: "no-cache", credentials: "same-origin" })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put("./", copy));
