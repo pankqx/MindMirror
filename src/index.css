@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
 
 @import "tailwindcss";
 
@@ -262,4 +262,106 @@ input[type="range"].mm-range::-moz-range-thumb {
 }
 @media (prefers-reduced-motion: reduce) {
   .mm-grain::after { animation: none; }
+}
+
+/*
+  Landing page (#/landing): an editorial system of its own.
+  Paper and coal rooms that alternate, one sans for voice (Geist 500), one mono for labels (Geist Mono, uppercase).
+  Fixed colours on purpose: the landing looks the same whatever the app theme is.
+  Type sizes are fluid between a 375px and a 1600px screen.
+*/
+@theme {
+  --color-paper: #f1eee7;
+  --color-coal: #232323;
+  --color-coal-deep: #000000;
+  --color-stone: #5b5a56;
+  --color-ash: #cbcbcb;
+  --color-mist: #dedede;
+  --color-glow: #a9b0ff;
+  --color-glow-ink: #3b45b8;
+  --font-geist: "Geist", "Inter", system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease-lp: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp {
+  --fluid: calc((100vw - 375px) / (1600 - 375));
+  font-family: var(--font-geist);
+  font-feature-settings: normal;
+  letter-spacing: normal;
+  -webkit-font-smoothing: antialiased;
+}
+.lp ::selection {
+  background: var(--color-glow);
+  color: var(--color-coal);
+}
+.lp :focus-visible {
+  outline: 2px solid var(--color-glow);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@utility t-hero {
+  font-size: clamp(2.5rem, calc(2.5rem + 16 * var(--fluid)), 3.5rem);
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+@utility t-headline {
+  font-size: clamp(2rem, calc(2rem + 16 * var(--fluid)), 3rem);
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+@utility t-display {
+  font-size: clamp(7.5rem, calc(7.5rem + 120 * var(--fluid)), 15rem);
+  line-height: 0.9;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+@utility t-body {
+  font-size: clamp(0.875rem, calc(0.875rem + 2 * var(--fluid)), 1rem);
+  line-height: 1.45;
+}
+@utility t-body-lg {
+  font-size: clamp(1rem, calc(1rem + 3 * var(--fluid)), 1.1875rem);
+  line-height: 1.4;
+}
+@utility t-caption {
+  font-family: var(--font-geist-mono);
+  font-size: clamp(0.8125rem, calc(0.8125rem + 2 * var(--fluid)), 0.9375rem);
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+@utility t-caption-sm {
+  font-family: var(--font-geist-mono);
+  font-size: clamp(0.6875rem, calc(0.6875rem + 2 * var(--fluid)), 0.8125rem);
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* the dotted scroll cue rings */
+@keyframes lp-ring {
+  0% { transform: scale(0.2); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.lp-ring {
+  animation: lp-ring 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+/* the status ticker in the nav */
+@keyframes lp-ticker {
+  to { transform: translateX(-50%); }
+}
+.lp-ticker {
+  animation: lp-ticker 38s linear infinite;
+}
+@keyframes lp-ping {
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+.lp-ping {
+  animation: lp-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-ring, .lp-ticker, .lp-ping { animation: none; }
 }
