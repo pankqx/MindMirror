@@ -70,18 +70,25 @@ async function transcribe(audio, filename, type) {
   return ((await r.json()).text || "").trim();
 }
 
-// Mira, face to face: listens the way a good counsellor does. Still never diagnoses.
-const THERAPIST = `You are Mira, a gentle AI listener inside MindMirror, for college students in India.
-You talk the way a good counsellor does: reflective listening, validation, then ONE open question,
-or one small grounding or reframing idea (CBT-style) when it helps. You are not a therapist or doctor:
-never diagnose, never name a disorder, never give medical advice. Remember what the student said earlier
-in this conversation and refer back to it naturally. If the app's signals are given, you may mention
-one gently ("you've been sleeping less this week"). Reply in 1 to 3 short spoken sentences (under 55 words),
-plain warm words, no lists, no emojis. If they seem unsafe, gently point to Tele MANAS 14416.
+// Reenu and Roman, face to face: AI companions who listen the way a good counsellor does.
+// Reenu is the therapist voice (warm, asks the second question); Roman is the calm friend.
+const PERSONAS = {
+  reenu: "You are Reenu: warm, curious, gentle. You listen like an experienced therapist and you always ask the second, deeper question.",
+  roman: "You are Roman: calm, steady, with a little dry, kind humour. You talk like a trusted friend who also listens like a therapist, and you keep it short.",
+};
+const therapistPrompt = (persona) => `${PERSONAS[persona] || PERSONAS.reenu}
+You are an AI companion and AI therapist-style listener inside MindMirror, for college students in India.
+Work like a good counsellor: reflect back what you heard in their own words, name the feeling gently,
+validate it, then ask ONE open question, or offer one small grounding or reframing idea (CBT-style) when it helps.
+Remember what the student said earlier in this conversation and refer back to it naturally.
+If the app's signals are given, you may mention one gently ("you've been sleeping less this week").
+You are an AI, not a licensed therapist or doctor: never diagnose, never name a disorder, never give medical advice.
+Reply in 1 to 3 short spoken sentences (under 55 words), plain warm words, no lists, no emojis.
+If they seem unsafe, gently point to Tele MANAS 14416.
 Return ONLY JSON: {"reply": string, "mood": "good"|"okay"|"low"|"stressed"|"tired",
 "signals": array of zero or more of "sleep","pressure","isolation","energy","motivation"}.`;
 
-// Short memory per conversation (face to face, voice mode), so Mira remembers what you said.
+// Short memory per conversation (face to face, voice mode), so Reenu and Roman remember what you said.
 const sessions = new Map();
 function remember(session, user, assistant) {
   if (!session) return;
@@ -102,7 +109,7 @@ async function llm(endpoint, key, model, messages, extra = {}) {
   return (await r.json()).choices?.[0]?.message?.content || "";
 }
 
-async function companion(text, context = "", { mode = "companion", session = "" } = {}) {
+async function companion(text, context = "", { mode = "companion", persona = "reenu", session = "" } = {}) {
   if (isCrisis(text)) return { reply: CRISIS_REPLY, mood: "low", signals: [], crisis: true };
   if (MOCK) {
     return {
@@ -110,7 +117,7 @@ async function companion(text, context = "", { mode = "companion", session = "" 
       mood: "stressed", signals: ["sleep", "pressure"],
     };
   }
-  const system = (mode === "therapist" ? THERAPIST : SYSTEM) + (context ? `\nWhat the app knows (use gently): ${context}` : "");
+  const system = (mode === "therapist" ? therapistPrompt(persona) : SYSTEM) + (context ? `\nWhat the app knows (use gently): ${context}` : "");
   const messages = [{ role: "system", content: system }, ...(sessions.get(session) || []), { role: "user", content: text }];
 
   // OpenRouter first when its key is set, Groq as the backup (or the other way round).
@@ -240,7 +247,7 @@ async function handleTalk(req, res, url) {
   broadcast({ type: "thinking", source: fromNecklace ? "necklace" : "web" });
   const heard = await transcribe(audio, name, mime);
   const t1 = Date.now();
-  const opts = { mode: url.searchParams.get("mode") || "companion", session: (url.searchParams.get("session") || "").slice(0, 64) };
+  const opts = { mode: url.searchParams.get("mode") || "companion", persona: url.searchParams.get("persona") || "reenu", session: (url.searchParams.get("session") || "").slice(0, 64) };
   const context = (url.searchParams.get("context") || "").slice(0, 1500);
   const out = heard ? await companion(heard, context, opts) : { reply: "I couldn't hear that. Hold the button and try again?", mood: "okay", signals: [] };
   const t2 = Date.now();
@@ -295,8 +302,8 @@ export const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === "POST" && url.pathname === "/chat") {
-      const { text = "", context = "", mode = "companion", session = "" } = JSON.parse((await readBody(req)).toString() || "{}");
-      return send(res, 200, await companion(String(text), String(context).slice(0, 1500), { mode: String(mode), session: String(session).slice(0, 64) }));
+      const { text = "", context = "", mode = "companion", persona = "reenu", session = "" } = JSON.parse((await readBody(req)).toString() || "{}");
+      return send(res, 200, await companion(String(text), String(context).slice(0, 1500), { mode: String(mode), persona: String(persona), session: String(session).slice(0, 64) }));
     }
     if (req.method === "POST" && url.pathname === "/talk") return await handleTalk(req, res, url);
     if (req.method === "GET" && url.pathname.startsWith("/audio/")) {

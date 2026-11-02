@@ -21,8 +21,8 @@ const SR = (window as unknown as { SpeechRecognition?: new () => Recognition; we
   .SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition;
 
 /** `voice: false` keeps replies on screen only (the landing lets people choose).
- *  `mode: "therapist"` is Mira face to face: a counsellor's way of listening, with memory of this conversation. */
-export function useConversation(opts: { voice?: boolean; mode?: "companion" | "therapist" } = {}) {
+ *  `mode: "therapist"` is Reenu or Roman face to face: a counsellor's way of listening, with memory of this conversation. */
+export function useConversation(opts: { voice?: boolean; mode?: "companion" | "therapist"; persona?: "reenu" | "roman" } = {}) {
   const voiceOn = useRef(opts.voice !== false);
   useEffect(() => { voiceOn.current = opts.voice !== false; }, [opts.voice]);
   // one conversation = one session on the hub, so the AI remembers what was said
@@ -30,7 +30,9 @@ export function useConversation(opts: { voice?: boolean; mode?: "companion" | "t
   const ins = useInsights();
   const context = useRef("");
   useEffect(() => { context.current = ins ? contextFor(ins) : ""; }, [ins]);
-  const talkOpts = () => ({ mode: opts.mode ?? "companion", session: session.current, context: context.current });
+  const persona = useRef(opts.persona);
+  useEffect(() => { persona.current = opts.persona; }, [opts.persona]);
+  const talkOpts = () => ({ mode: opts.mode ?? "companion", persona: persona.current, session: session.current, context: context.current });
   const speaking = useSpeaking();
   const [busy, setBusy] = useState<null | "listening" | "thinking">(null);
   const [heard, setHeard] = useState("");

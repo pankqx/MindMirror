@@ -42,6 +42,8 @@ export default function Companion() {
     ...typed,
   ].sort((a, b) => a.at.localeCompare(b.at));
 
+  const session = useRef(Math.random().toString(36).slice(2, 12));
+
   async function send(t: string) {
     if (busy) return;
     setError("");
@@ -49,7 +51,8 @@ export default function Companion() {
     if (isCrisis(t)) setCrisis(true);
     setBusy(true);
     try {
-      const r = await chat(t, ins ? contextFor(ins) : "");
+      // Reenu or Roman answers as an AI companion who listens like a therapist, and remembers this chat
+      const r = await chat(t, ins ? contextFor(ins) : "", { mode: "therapist", persona: who, session: session.current });
       if (r.crisis) setCrisis(true);
       setTyped((m) => [...m, { from: "mindmirror", text: r.reply, at: new Date().toISOString() }]);
     } catch {
@@ -63,7 +66,7 @@ export default function Companion() {
   async function holdStart() {
     setError("");
     try {
-      const talk = await startTalk();
+      const talk = await startTalk({ mode: "therapist", persona: who, session: session.current, context: ins ? contextFor(ins) : "" });
       talkRef.current = talk;
       setLevel(() => talk.level);
       setHold("listening");

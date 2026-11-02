@@ -163,7 +163,7 @@ export default function Home({ go }: { go: Go }) {
 
           <motion.div variants={item} className="mt-8">
             <SectionTitle>Talk it out</SectionTitle>
-            <Row onClick={() => go("face")} icon={<FaceIcon size={19} />} title="Face to face with Mira" meta="AI therapist: listens, remembers, knows your signals" />
+            <Row onClick={() => go("face")} icon={<FaceIcon size={19} />} title="Face to face with Reenu or Roman" meta="AI companion and therapist: listens, remembers, knows your signals" />
             <Row onClick={() => go("voice")} icon={<WaveIcon size={19} />} title="Voice mode" meta="Just talk, by phone or necklace" />
             <Row onClick={() => go("breathe")} icon={<WindIcon size={19} />} title="Breathe" meta="One minute, 4 in and 6 out" />
           </motion.div>

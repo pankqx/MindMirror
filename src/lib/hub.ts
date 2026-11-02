@@ -91,13 +91,13 @@ export function useHubOnline(): boolean | null {
 // ---------- chat ----------
 
 /** Typed chat. `context` = proof sentences of signals that need attention. */
-export interface TalkOpts { mode?: "companion" | "therapist"; session?: string; context?: string }
+export interface TalkOpts { mode?: "companion" | "therapist"; persona?: "reenu" | "roman"; session?: string; context?: string }
 
 export async function chat(text: string, context = "", opts: TalkOpts = {}): Promise<Reply> {
   const r = await fetch(`${HUB}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, context, mode: opts.mode, session: opts.session }),
+    body: JSON.stringify({ text, context, mode: opts.mode, persona: opts.persona, session: opts.session }),
     signal: AbortSignal.timeout(20000),
   });
   if (!r.ok) throw new Error(`hub ${r.status}`);
@@ -354,7 +354,7 @@ export async function startTalk(opts: TalkOpts = {}): Promise<Talk> {
       await finish();
       if (Date.now() - started < 500) throw new Error("too short");
       const type = rec.mimeType || "audio/webm";
-      const q = new URLSearchParams({ src: "web", mode: opts.mode ?? "companion", session: opts.session ?? "", context: (opts.context ?? "").slice(0, 1500) });
+      const q = new URLSearchParams({ src: "web", mode: opts.mode ?? "companion", persona: opts.persona ?? "", session: opts.session ?? "", context: (opts.context ?? "").slice(0, 1500) });
       const r = await fetch(`${HUB}/talk?${q}`, {
         method: "POST",
         headers: { "Content-Type": type.split(";")[0] },
