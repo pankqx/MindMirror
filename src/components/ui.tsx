@@ -22,10 +22,10 @@ type ButtonProps = {
 
 export function Button({ variant = "primary", onClick, children, className = "", disabled, type = "button" }: ButtonProps) {
   const styles = {
-    primary: "bg-ink text-bg hover:opacity-90",
-    soft: "bg-transparent text-ink border border-line hover:bg-card-2",
+    primary: "bg-ink text-bg hover:bg-indigo hover:text-indigo-ink",
+    soft: "bg-transparent text-ink border border-ink/20 hover:border-ink hover:bg-card",
     urgent: "bg-urgent text-white",
-    ghost: "bg-transparent text-soft",
+    ghost: "bg-transparent text-soft hover:text-ink",
   };
 
   return (
@@ -35,7 +35,7 @@ export function Button({ variant = "primary", onClick, children, className = "",
       disabled={disabled}
       whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={spring}
-      className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-[15px] font-semibold transition-colors disabled:opacity-35 ${styles[variant]} ${className}`}
+      className={`t-caption inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[4px] px-6 py-3 transition-colors disabled:opacity-35 ${styles[variant]} ${className}`}
     >
       {children}
     </motion.button>
@@ -148,16 +148,16 @@ type ToggleProps = {
 
 export function Toggle({ value, onChange, yesLabel, noLabel }: ToggleProps) {
   return (
-    <div className="relative grid grid-cols-2 gap-1 rounded-2xl bg-card-2 p-1">
+    <div className="relative grid grid-cols-2 gap-1 rounded-[6px] bg-card-2 p-1">
       {[true, false].map((v) => (
         <button
           key={String(v)}
           type="button"
           onClick={() => onChange(v)}
-          className={`relative z-10 min-h-12 rounded-xl font-semibold transition-colors ${value === v ? "text-bg" : "text-soft"}`}
+          className={`t-caption relative z-10 min-h-12 rounded-[4px] transition-colors ${value === v ? "text-bg" : "text-soft"}`}
         >
           {value === v && (
-            <motion.span layoutId="toggle-pill" transition={spring} className="absolute inset-0 -z-10 rounded-xl bg-ink" />
+            <motion.span layoutId="toggle-pill" transition={spring} className="absolute inset-0 -z-10 rounded-[4px] bg-ink" />
           )}
           {v ? yesLabel : noLabel}
         </button>
@@ -181,7 +181,7 @@ export function Screen({ title, subtitle, onBack, children }: ScreenProps) {
   return (
     <div className="lg:max-w-[680px]">
       {onBack && (
-        <button onClick={onBack} aria-label="Go back" className="mb-4 grid h-10 w-10 place-items-center rounded-full border border-line text-ink">
+        <button onClick={onBack} aria-label="Go back" className="mb-4 grid h-10 w-10 place-items-center rounded-[4px] border border-line text-ink">
           <BackIcon />
         </button>
       )}
@@ -191,15 +191,19 @@ export function Screen({ title, subtitle, onBack, children }: ScreenProps) {
   );
 }
 
-/** Editorial page header: a small eyebrow, a serif title, one line of lede. */
+/** Editorial page header: a mono eyebrow on a thread, a Geist title whose <em> words turn to serif italic, one line of lede. */
 export function PageHeader({ eyebrow, title, lede, right }: { eyebrow?: string; title: React.ReactNode; lede?: React.ReactNode; right?: React.ReactNode }) {
   return (
     <motion.header className="mb-8 mt-2 flex items-end justify-between gap-4 lg:mb-10" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease }}>
       <div className="min-w-0">
-        {eyebrow && <p className="mb-2 text-[13px] font-medium text-faint">{eyebrow}</p>}
-        <h1 className="font-display text-[2.6rem] text-ink lg:text-[3.4rem]">{title}</h1>
-        {lede && <p className="mt-3 max-w-[36ch] text-[15px] leading-relaxed text-soft">{lede}</p>}
+        {eyebrow && (
+          <p className="t-caption-sm mb-4 flex items-center gap-3 text-soft">
+            <span className="stitch-x inline-block h-[2px] w-8 text-indigo" aria-hidden="true" />{eyebrow}
+          </p>
+        )}
+        <h1 className="text-[2.4rem] font-medium leading-[1.02] tracking-[-0.03em] text-ink lg:text-[3.3rem] [&_em]:font-display [&_em]:text-[1.1em] [&_em]:font-normal [&_em]:italic [&_em]:tracking-[-0.01em] [&_em]:text-indigo">{title}</h1>
+        {lede && <p className="mt-4 max-w-[38ch] text-[15px] leading-relaxed text-soft">{lede}</p>}
       </div>
       {right}
     </motion.header>
@@ -218,7 +222,7 @@ export function Pill({ children, tone = "neutral" }: { children: React.ReactNode
     coral: "text-coral-ink",
     indigo: "text-indigo",
   };
-  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] font-medium ${tones[tone]}`}>{children}</span>;
+  return <span className={`t-caption-sm inline-flex items-center gap-1.5 whitespace-nowrap ${tones[tone]}`}>{children}</span>;
 }
 
 /** Staggered fade-up for lists of cards. */
@@ -233,8 +237,9 @@ export const item = {
 
 export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="mb-3 mt-4 flex items-end justify-between border-b border-line pb-2.5">
-      <h2 className="text-[13px] font-medium text-soft">{children}</h2>
+    <div className="relative mb-3 mt-4 flex items-end justify-between pb-2.5">
+      <span className="stitch-x absolute inset-x-0 bottom-0 h-[2px] text-line" aria-hidden="true" />
+      <h2 className="t-caption-sm text-soft">{children}</h2>
       {action}
     </div>
   );

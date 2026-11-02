@@ -125,7 +125,7 @@ export default function Chat({ messages, onSend, onHoldStart, onHoldEnd, typing,
         <div className="no-scrollbar -mx-5 mb-3 flex gap-2 overflow-x-auto px-5">
           {suggestions.map((s) => (
             <motion.button key={s} whileTap={{ scale: 0.95 }} onClick={() => handleSend(s)}
-              className="shrink-0 rounded-full border border-line px-4 py-2 text-[13px] font-medium text-soft hover:border-ink/30 hover:text-ink">
+              className="t-caption-sm shrink-0 rounded-full border border-ink/15 px-3.5 py-2 text-soft hover:border-indigo hover:text-indigo">
               {s}
             </motion.button>
           ))}
