@@ -7,6 +7,24 @@ import UrgentHelp from "../screens/UrgentHelp";
 import { BackPill, Cursor } from "./bits";
 import { createFace, type Face } from "./face3d";
 import { Spoken } from "./VoiceMode";
+import { InkCharacter } from "../character/InkCharacter";
+import { characters, type CharState, type Expression } from "../character/characters";
+
+type Who = "reenu" | "roman" | "mira";
+const WHO: { id: Who; label: string }[] = [
+  { id: "reenu", label: "Reenu" },
+  { id: "roman", label: "Roman" },
+  { id: "mira", label: "Mira" },
+];
+const readWho = (): Who => {
+  try {
+    const v = localStorage.getItem("mm-character");
+    return v === "roman" || v === "mira" ? v : "reenu";
+  } catch {
+    return "reenu";
+  }
+};
+const STATE: Record<string, CharState> = { idle: "IDLE", listening: "LISTENING", thinking: "THINKING", speaking: "SPEAKING" };
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -52,6 +70,22 @@ export default function FaceMode({ go }: { go: Go }) {
   const [typing, setTyping] = useState(false);
   const [text, setText] = useState("");
   const { name } = usePrefs();
+  const [who, setWhoState] = useState<Who>(readWho);
+  const [greeting, setGreeting] = useState(true);
+  const setWho = (w: Who) => {
+    setWhoState(w);
+    setGreeting(true);
+    try { localStorage.setItem("mm-character", w); } catch { /* private mode */ }
+  };
+  useEffect(() => {
+    if (!greeting) return;
+    const t = window.setTimeout(() => setGreeting(false), 2600);
+    return () => window.clearTimeout(t);
+  }, [greeting]);
+  const persona = who === "mira" ? null : characters[who];
+  const inkState: CharState = greeting && c.phase === "idle" ? "GREETING" : STATE[c.phase];
+  const expr: Expression = c.crisis ? "concerned" : c.phase === "idle" && c.reply ? "happy" : "neutral";
+  const displayName = persona?.name ?? "Mira";
   const mx = useMotionValue(0), my = useMotionValue(0);
   const smx = useSpring(mx, { stiffness: 60, damping: 20 }), smy = useSpring(my, { stiffness: 60, damping: 20 });
 
@@ -59,7 +93,13 @@ export default function FaceMode({ go }: { go: Go }) {
     let face: Face | null = null;
     let raf = 0;
     let dead = false;
-    if (!canvas.current) return;
+    const onMove = (e: PointerEvent) => {
+      mx.set((e.clientX / window.innerWidth) * 2 - 1);
+      my.set((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener("pointermove", onMove);
+    if (who !== "mira" || !canvas.current) return () => window.removeEventListener("pointermove", onMove);
+    setReady("loading");
     createFace(canvas.current, `${import.meta.env.BASE_URL}models/face.glb`)
       .then((f) => {
         if (dead) return f.dispose();
@@ -73,13 +113,8 @@ export default function FaceMode({ go }: { go: Go }) {
         raf = requestAnimationFrame(tick);
       })
       .catch(() => setReady("fail"));
-    const onMove = (e: PointerEvent) => {
-      mx.set((e.clientX / window.innerWidth) * 2 - 1);
-      my.set((e.clientY / window.innerHeight) * 2 - 1);
-    };
-    window.addEventListener("pointermove", onMove);
     return () => { dead = true; cancelAnimationFrame(raf); face?.dispose(); window.removeEventListener("pointermove", onMove); };
-  }, [mx, my]);
+  }, [mx, my, who]);
 
   // Space bar: hold to talk
   useEffect(() => {
@@ -103,7 +138,7 @@ export default function FaceMode({ go }: { go: Go }) {
     else if (c.phase === "idle") void c.start();
   };
 
-  const status = c.error || { idle: "Tap Talk, or hold Space, and say what's on your mind.", listening: "Mira is listening…", thinking: "Mira is thinking…", speaking: "" }[c.phase];
+  const status = c.error || { idle: "Tap Talk, or hold Space, and say what's on your mind.", listening: `${displayName} is listening…`, thinking: `${displayName} is thinking…`, speaking: "" }[c.phase];
 
   return (
     <div className="night fixed inset-0 z-50 overflow-hidden text-ink" style={{ background: "#07060a" }}>
@@ -123,15 +158,29 @@ export default function FaceMode({ go }: { go: Go }) {
         {MOMENTS.map((m, i) => <Moment key={i} m={m} i={i} mx={smx} my={smy} />)}
       </div>
 
+      {/* Reenu or Roman, standing in a pool of warm light */}
+      <AnimatePresence mode="wait">
+        {persona && (
+          <motion.div key={persona.id} className="pointer-events-none absolute inset-x-0 bottom-[118px] flex justify-center lg:bottom-[128px]"
+            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: 20, filter: "blur(10px)" }} transition={{ duration: 0.8, ease }}>
+            <div className="absolute -bottom-[10%] h-[64vh] w-[64vh] max-w-[110vw] rounded-full"
+              style={{ background: `radial-gradient(closest-side, ${persona.accent}55, rgba(255,214,170,0.28) 45%, transparent 75%)` }} />
+            <InkCharacter config={persona} state={inkState} expression={expr} level={c.phase === "speaking" ? c.level : undefined}
+              height="min(56vh, 112vw)" className="relative" label={`${persona.name}, your companion (illustration)`} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mira */}
-      <motion.canvas ref={canvas} className="absolute inset-0 h-full w-full" aria-label="Mira, a face made of light"
-        initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: ready === "ok" ? 1 : 0, scale: ready === "ok" ? 1 : 0.96 }} transition={{ duration: 1.6, ease }} />
-      {ready === "loading" && (
+      {who === "mira" && <motion.canvas ref={canvas} className="absolute inset-0 h-full w-full" aria-label="Mira, a face made of light"
+        initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: ready === "ok" ? 1 : 0, scale: ready === "ok" ? 1 : 0.96 }} transition={{ duration: 1.6, ease }} />}
+      {who === "mira" && ready === "loading" && (
         <div className="absolute inset-0 grid place-items-center">
           <motion.span className="h-24 w-24 rounded-full border border-white/20" animate={{ scale: [1, 1.15, 1], opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.8, repeat: Infinity }} />
         </div>
       )}
-      {ready === "fail" && (
+      {who === "mira" && ready === "fail" && (
         <div className="absolute inset-0 grid place-items-center px-8 text-center text-soft">
           This device can't draw Mira in 3D, but she can still listen and talk.
         </div>
@@ -139,29 +188,38 @@ export default function FaceMode({ go }: { go: Go }) {
 
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-5 lg:p-8">
         <BackPill onClick={() => go("landing")} />
+        <div className="mm-glass absolute left-1/2 top-[72px] flex -translate-x-1/2 rounded-full p-1 lg:static lg:translate-x-0" role="tablist" aria-label="Choose who to talk to">
+          {WHO.map((w) => (
+            <button key={w.id} role="tab" aria-selected={who === w.id} onClick={() => setWho(w.id)}
+              className={`relative h-8 rounded-full px-4 text-[13px] font-medium transition-colors ${who === w.id ? "text-black" : "text-soft hover:text-ink"}`}>
+              {who === w.id && <motion.span layoutId="who-pill" className="absolute inset-0 rounded-full bg-white" transition={{ type: "spring", stiffness: 500, damping: 38 }} />}
+              <span className="relative">{w.label}</span>
+            </button>
+          ))}
+        </div>
         <button onClick={() => go("voice")} className="mm-glass h-10 rounded-full px-4 text-[13px] font-medium transition-colors hover:bg-white/10">
           Voice only
         </button>
       </header>
 
-      <motion.div className="pointer-events-none absolute inset-x-0 top-[9%] z-10 px-6 text-center lg:top-[7%]"
+      <motion.div className="pointer-events-none absolute inset-x-0 top-[124px] z-10 px-6 text-center lg:top-[96px]"
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 1, ease }}>
-        <h1 className="font-display text-[2.4rem] leading-none lg:text-[3.2rem]">{name ? `Hi ${name}, I'm Mira.` : "Hi, I'm Mira."}</h1>
+        <h1 className="font-display text-[2.4rem] leading-none lg:text-[3.2rem]">{name ? `Hi ${name}, I'm ${displayName}.` : `Hi, I'm ${displayName}.`}</h1>
         <p className="mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-soft lg:text-[14px]">
-          A listener made of light. Tell me anything; together we'll find one small next step.
+          {persona ? `${persona.tagline[0].toUpperCase()}${persona.tagline.slice(1)}.` : "A listener made of light."} Tell me anything; together we'll find one small next step.
         </p>
       </motion.div>
 
       {/* heard + reply */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-[19%] z-10 px-6 text-center">
+      <div className="pointer-events-none absolute inset-x-0 bottom-[132px] z-10 px-4 text-center">
         <AnimatePresence mode="wait">
           {c.reply && c.phase !== "listening" ? (
-            <motion.div key={c.reply} exit={{ opacity: 0, y: -8 }}>
+            <motion.div key={c.reply} exit={{ opacity: 0, y: -8 }} className="mm-glass mx-auto max-w-2xl rounded-3xl px-6 py-4" style={{ background: "rgba(10,10,16,0.62)" }}>
               {c.heard && <p className="mb-3 text-[13px] italic text-faint">“{c.heard}”</p>}
               <Spoken text={c.reply} className="mx-auto max-w-2xl font-display text-[1.55rem] leading-snug lg:text-[2.1rem]" />
             </motion.div>
           ) : (
-            <motion.p key={c.phase + c.error} className="text-[14px] text-soft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.p key={c.phase + c.error} className="mm-glass mx-auto w-fit rounded-full px-4 py-2 text-[13px] text-soft" style={{ background: "rgba(10,10,16,0.62)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {c.phase === "listening" && c.heard ? `“${c.heard}”` : status}
             </motion.p>
           )}
@@ -176,7 +234,7 @@ export default function FaceMode({ go }: { go: Go }) {
             <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
               onSubmit={(e) => { e.preventDefault(); if (text.trim()) { void c.say(text.trim()); setText(""); } }}
               className="mm-glass flex w-full max-w-md items-center gap-2 rounded-full p-1.5 pl-5">
-              <input autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="Type to Mira…"
+              <input autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder={`Type to ${displayName}…`}
                 className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-faint" />
               <button className="h-9 rounded-full bg-white px-4 text-[13px] font-semibold text-black">Send</button>
             </motion.form>
@@ -192,14 +250,14 @@ export default function FaceMode({ go }: { go: Go }) {
             {c.phase === "listening" ? (<><span className="h-2.5 w-2.5 rounded-sm bg-black" /> Done</>)
               : c.phase === "speaking" ? "Stop"
               : c.phase === "thinking" ? "…"
-              : (<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg> Talk to Mira</>)}
+              : (<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg> Talk to {displayName}</>)}
           </motion.button>
           <button onClick={() => go("support")} aria-label="Real people"
             className="mm-glass grid h-12 w-12 place-items-center rounded-full text-soft transition-colors hover:text-ink" title="Talk to a real person">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
           </button>
         </div>
-        <p className="text-[11px] text-faint">Mira is an AI companion, not a therapist. For real help: Tele-MANAS 14416.</p>
+        <p className="text-[11px] text-faint">{displayName} is an AI companion, not a therapist. For real help: Tele-MANAS 14416.</p>
       </div>
     </div>
   );
