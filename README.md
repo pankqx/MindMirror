@@ -24,6 +24,16 @@ npm start            # http://localhost:8787/health should say ok
 
 No key or no internet: `npm run mock` with `MOCK_AI=1`.
 
+## The rooms
+
+- **Landing** (`#/`): a living particle field (three.js) that folds from a galaxy into an orb, a calm wave and a mirror as you scroll (Lenis smooth scroll). It ends on three doors.
+- **Voice mode** (`#/voice`): for tired days. A sky orb that breathes with your voice and with the reply. Tap to talk, or hold Space.
+- **Face to face** (`#/face`): Mira, a face of light with 52 real expressions. She looks at you, blinks, listens, thinks and moves her lips with her voice.
+- **Play room**: Jelly (a soft-body friend), glossy bubble wrap, Let it go (a worry dissolving into embers and stars), and the koi pond.
+
+Both talking rooms use the hub when it runs and fall back to the browser's own voice and kind offline replies when it doesn't.
+Face model: "facecap" by Face Cap (bannaflak.com), from the three.js examples, stripped of textures for size.
+
 ## On a phone (installable app)
 
 1. Laptop and phone on the same Wi-Fi. On the laptop: `npm run phone` (builds, then serves on port 5173 to the network) and start the hub.

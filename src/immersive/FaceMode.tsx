@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useConversation } from "../lib/converse";
 import type { Go } from "../lib/nav";
 import { usePrefs } from "../lib/prefs";
@@ -46,7 +46,7 @@ function Moment({ m, i, mx, my }: { m: (typeof MOMENTS)[number]; i: number; mx: 
 export default function FaceMode({ go }: { go: Go }) {
   const c = useConversation();
   const live = useRef(c);
-  live.current = c;
+  useLayoutEffect(() => { live.current = c; });
   const canvas = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState<"loading" | "ok" | "fail">("loading");
   const [typing, setTyping] = useState(false);

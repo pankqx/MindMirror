@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useConversation, type Phase } from "../lib/converse";
 import type { Go } from "../lib/nav";
 import UrgentHelp from "../screens/UrgentHelp";
@@ -36,7 +36,7 @@ export default function VoiceMode({ go }: { go: Go }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const orb = useRef<SkyOrb | null>(null);
   const live = useRef(c);
-  live.current = c;
+  useLayoutEffect(() => { live.current = c; });
   const [typing, setTyping] = useState(false);
   const [text, setText] = useState("");
 
