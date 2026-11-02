@@ -37,3 +37,5 @@ export const MinusIcon = (p: P) => <Svg {...p}><path d="M5 12h14" /></Svg>;
 export const CloseIcon = (p: P) => <Svg {...p}><path d="M6 6l12 12M18 6 6 18" /></Svg>;
 export const SpeakerIcon = (p: P) => <Svg {...p}><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></Svg>;
 export const TrashIcon = (p: P) => <Svg {...p}><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5" /></Svg>;
+export const WaveIcon = (p: P) => <Svg {...p}><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" /></Svg>;
+export const FaceIcon = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M8.8 14.3c.9 1.1 2 1.7 3.2 1.7s2.3-.6 3.2-1.7" /><path d="M9.2 9.8h.01M14.8 9.8h.01" strokeWidth={2.6} /></Svg>;

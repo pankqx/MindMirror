@@ -218,10 +218,41 @@ export function useSpeaking() {
   );
 }
 
+// Output level of the reply that is playing, so the orb and the face can move with the voice.
+let outAnalyser: AnalyserNode | null = null;
+const outBuf = new Uint8Array(512);
+let browserVoice = false;
+
+/** 0..1 loudness of the reply being spoken right now. */
+export function outputLevel() {
+  if (!isSpeaking) return 0;
+  if (browserVoice || !outAnalyser) {
+    // The browser's own voice gives no audio stream, so fake a natural talking rhythm.
+    const t = performance.now() / 1000;
+    return Math.max(0, 0.35 + 0.3 * Math.sin(t * 11) * Math.sin(t * 3.3) + 0.15 * Math.sin(t * 23));
+  }
+  outAnalyser.getByteTimeDomainData(outBuf);
+  let sum = 0;
+  for (const v of outBuf) sum += ((v - 128) / 128) ** 2;
+  return Math.min(1, Math.sqrt(sum / outBuf.length) * 5);
+}
+
 async function playBlob(blob: Blob) {
   speaking?.pause();
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
   const a = new Audio(URL.createObjectURL(blob));
   speaking = a;
+  browserVoice = false;
+  try {
+    ctx ??= new AudioContext();
+    void ctx.resume();
+    outAnalyser ??= Object.assign(ctx.createAnalyser(), { fftSize: 512 });
+    const src = ctx.createMediaElementSource(a);
+    src.connect(outAnalyser);
+    outAnalyser.connect(ctx.destination);
+  } catch {
+    /* plays without the level meter */
+  }
   setSpeaking(true);
   a.onended = a.onpause = () => setSpeaking(false);
   await a.play();
@@ -235,20 +266,22 @@ export async function speakReply(text: string, audioPath?: string) {
     if (!r.ok) throw new Error(`hub ${r.status}`);
     await playBlob(await r.blob());
   } catch {
-    speakWithBrowser(text);
+    void speakWithBrowser(text);
   }
 }
 
-export function speakWithBrowser(text: string) {
-  if (!("speechSynthesis" in window)) return;
+export function speakWithBrowser(text: string): Promise<void> {
+  if (!("speechSynthesis" in window)) return Promise.resolve();
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
   u.voice = voices.find((v) => v.lang === "en-IN") ?? voices.find((v) => v.lang.startsWith("en")) ?? null;
   u.rate = 0.95;
-  u.onstart = () => setSpeaking(true);
-  u.onend = u.onerror = () => setSpeaking(false);
-  speechSynthesis.speak(u);
+  return new Promise<void>((resolve) => {
+    u.onstart = () => { browserVoice = true; setSpeaking(true); };
+    u.onend = u.onerror = () => { setSpeaking(false); resolve(); };
+    speechSynthesis.speak(u);
+  });
 }
 
 export function stopSpeaking() {
