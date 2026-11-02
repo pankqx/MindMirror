@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { BREATH_CARD } from "../../content/landing";
 import type { Go } from "../../lib/nav";
-import { Btn, ease } from "./kit";
+import { Btn } from "./kit";
+import { ease } from "./motion";
 
 export function DiveTile({ go }: { go: Go }) {
   return (
@@ -63,12 +64,12 @@ export function BreathCard({ go }: { go: Go }) {
     <AnimatePresence>
       {show && !gone && (
         <motion.aside aria-label={BREATH_CARD.title}
-          className="fixed inset-x-4 bottom-16 z-40 flex flex-col gap-4 rounded-[8px] border border-white/20 bg-coal p-4 text-white lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[400px] lg:p-5"
+          className="fixed inset-x-4 bottom-16 z-40 flex flex-col gap-3 rounded-[8px] border border-white/20 bg-coal p-3 text-white sm:gap-4 sm:p-4 lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[400px] lg:p-5"
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={{ duration: 0.5, ease }}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[18px] font-medium leading-tight">{BREATH_CARD.title}</p>
-              <p className="t-body mt-2 text-mist/75">{BREATH_CARD.body}</p>
+              <p className="text-[16px] font-medium leading-tight sm:text-[18px]">{BREATH_CARD.title}</p>
+              <p className="t-body mt-2 hidden text-mist/75 sm:block">{BREATH_CARD.body}</p>
             </div>
             <button onClick={close} aria-label="Close" className="grid size-7 shrink-0 place-items-center rounded-[3px] bg-white/10 hover:bg-white/20">
               <svg width="12" height="12" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" /></svg>

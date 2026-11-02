@@ -4,7 +4,8 @@
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { HERO } from "../../../content/landing";
-import { Btn, ease, Lines, scrollToId, useMedia } from "../kit";
+import { Btn, Lines } from "../kit";
+import { ease, scrollToId, useMedia } from "../motion";
 import { Vortex } from "../Vortex";
 
 export function Hero({ onStart }: { onStart: () => void }) {

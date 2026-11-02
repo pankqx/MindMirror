@@ -9,7 +9,7 @@ import { db } from "../lib/db";
 import { unlockAudio } from "../lib/hub";
 import { setPrefs, usePrefs } from "../lib/prefs";
 import { loadSample } from "../lib/sample";
-import { useLenis } from "../components/landing/kit";
+import { useLenis } from "../components/landing/motion";
 import { Nav } from "../components/landing/Nav";
 import { BreathCard, DiveTile, HelpPill } from "../components/landing/Floating";
 import { Hero } from "../components/landing/sections/Hero";

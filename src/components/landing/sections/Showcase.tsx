@@ -4,7 +4,8 @@
 import { motion } from "framer-motion";
 import type { Go } from "../../../lib/nav";
 import { SHOWCASE } from "../../../content/landing";
-import { Chip, ease, Fade, Lines } from "../kit";
+import { Chip, Fade, Lines } from "../kit";
+import { ease } from "../motion";
 
 const src = (name: string) => `${import.meta.env.BASE_URL}showcase/${name}.webp`;
 

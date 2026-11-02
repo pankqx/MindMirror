@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { FAQ } from "../../../content/landing";
 import { DotField } from "../DotField";
-import { Btn, ease, Lines } from "../kit";
+import { Btn, Lines } from "../kit";
+import { ease } from "../motion";
 
 export function Faq({ onStart }: { onStart: () => void }) {
   const [open, setOpen] = useState<number | null>(0);

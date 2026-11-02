@@ -3,7 +3,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { Go, Screen } from "../../../lib/nav";
 import { FINAL, FOOTER } from "../../../content/landing";
-import { Btn, Lines, Mark, scrollToId } from "../kit";
+import { Btn, Lines, Mark } from "../kit";
+import { scrollToId } from "../motion";
 
 /** Slow concentric rings behind the last line: the mirror, breathing (4 s in, 6 s out). */
 function Rings() {
@@ -40,7 +41,7 @@ export function Footer({ go }: { go: Go }) {
     return { onClick: () => go(to as Screen) };
   };
   return (
-    <footer className="bg-paper px-4 pb-8 pt-12 text-coal lg:px-20 lg:pb-10">
+    <footer className="bg-paper px-4 pb-20 pt-12 text-coal lg:px-20 lg:pb-10">
       <div className="grid grid-cols-1 gap-x-4 gap-y-12 border-t border-coal/15 pt-12 lg:grid-cols-12">
         <div className="flex flex-col items-start gap-8 lg:col-span-5">
           <button onClick={() => scrollToId("top")} className="flex items-center gap-2.5" aria-label="Back to top">

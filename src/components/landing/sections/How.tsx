@@ -4,7 +4,8 @@
 import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { HOW } from "../../../content/landing";
-import { Btn, ease, Lines, Ping, useMedia } from "../kit";
+import { Btn, Lines, Ping } from "../kit";
+import { ease, useMedia } from "../motion";
 
 export function How({ onSample }: { onSample: () => void }) {
   const [i, setI] = useState(0);

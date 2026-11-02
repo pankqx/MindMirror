@@ -6,9 +6,10 @@ import { useState } from "react";
 import { EXPERIENCE } from "../../../content/landing";
 import { DotField } from "../DotField";
 import { Figure } from "../Figures";
-import { Chip, ease, Fade, Lines } from "../kit";
+import { Chip, Fade, Lines } from "../kit";
+import { ease } from "../motion";
 
-const STEP = ["lg:ml-0", "lg:ml-[25%]", "lg:ml-[50%]"];
+const STEP = ["md:ml-0", "md:ml-[14%] lg:ml-[25%]", "md:ml-[28%] lg:ml-[50%]"];
 
 export function Experience() {
   const [active, setActive] = useState(0);
@@ -28,7 +29,7 @@ export function Experience() {
 
           <ul className="mt-16 flex flex-col gap-14 lg:mt-24 lg:gap-16">
             {EXPERIENCE.features.map((x, i) => (
-              <motion.li key={x.n} className={`flex flex-col gap-3 lg:max-w-[50%] ${STEP[i % 3]}`}
+              <motion.li key={x.n} className={`flex max-w-[560px] flex-col gap-3 lg:max-w-[50%] ${STEP[i % 3]}`}
                 onViewportEnter={() => setActive(i)} viewport={{ margin: "-48% 0px -48% 0px" }}>
                 <div className="mb-2 aspect-square w-32 border border-white/12 bg-coal/70 p-2 lg:hidden" aria-hidden="true">
                   <Figure i={i} />

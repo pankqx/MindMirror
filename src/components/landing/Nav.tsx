@@ -4,7 +4,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { NAV, TICKER } from "../../content/landing";
-import { ease, Mark, Ping, scrollToId } from "./kit";
+import { Mark, Ping } from "./kit";
+import { ease, scrollToId } from "./motion";
 
 function useActive(ids: readonly string[]) {
   const [active, setActive] = useState<string>("top");
