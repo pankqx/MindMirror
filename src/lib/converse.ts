@@ -3,7 +3,10 @@
 // Hub off: the browser listens (where it can) and answers with kind offline replies.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { chat, hubHealth, onHubEvent, outputLevel, speakReply, speakWithBrowser, startTalk, stopSpeaking, unlockAudio, useSpeaking, type Talk } from "./hub";
+import { chat, hubHealth, onHubEvent, outputLevel, pauseSpeaking, replayLast, resumeSpeaking, speakReply, speakWithBrowser, startTalk, stopSpeaking, unlockAudio, usePaused, useSpeaking, type Talk } from "./hub";
+
+// If the hub fails to turn speech into text once (no Groq key, no internet), the browser listens from then on.
+let hubCantListen = false;
 import { offlineReply } from "./offline";
 import { isCrisis } from "./support";
 import { contextFor } from "./signals";
@@ -34,6 +37,9 @@ export function useConversation(opts: { voice?: boolean; mode?: "companion" | "t
   useEffect(() => { persona.current = opts.persona; }, [opts.persona]);
   const talkOpts = () => ({ mode: opts.mode ?? "companion", persona: persona.current, session: session.current, context: context.current });
   const speaking = useSpeaking();
+  const paused = usePaused();
+  // bumps on Stop, so a reply that arrives after Stop stays quiet
+  const gen = useRef(0);
   const [busy, setBusy] = useState<null | "listening" | "thinking">(null);
   const [heard, setHeard] = useState("");
   const [reply, setReply] = useState("");
@@ -55,23 +61,27 @@ export function useConversation(opts: { voice?: boolean; mode?: "companion" | "t
   }), []);
 
   const answer = useCallback(async (text: string) => {
+    const my = ++gen.current;
     setHeard(text);
     setBusy("thinking");
     if (isCrisis(text)) setCrisis(true);
     let r: string;
     try {
       const res = await chat(text, context.current, talkOpts());
+      if (my !== gen.current) return;
       r = res.reply;
       if (res.crisis) setCrisis(true);
       setReply(r);
       setBusy(null);
       if (voiceOn.current) await speakReply(r);
     } catch {
+      if (my !== gen.current) return;
       r = offlineReply(text);
       setReply(r);
       setBusy(null);
       if (voiceOn.current) await speakWithBrowser(r);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const start = useCallback(async () => {
@@ -81,7 +91,7 @@ export function useConversation(opts: { voice?: boolean; mode?: "companion" | "t
     if (busy) return;
     const health = await hubHealth();
     // The hub listens when it has a speech-to-text key; otherwise the browser listens and the hub only answers.
-    if (health && health.stt !== false) {
+    if (health && health.stt !== false && !hubCantListen) {
       try {
         talk.current = await startTalk(talkOpts());
         micLevel.current = talk.current.level;
@@ -130,29 +140,46 @@ export function useConversation(opts: { voice?: boolean; mode?: "companion" | "t
     talk.current = null;
     setBusy("thinking");
     waitingTurn.current = true;
+    const my = ++gen.current;
     try {
       await t.stop();
+      if (my !== gen.current) { stopSpeaking(); return; }
       // the turn event (text) normally arrives with the audio; never wait forever
       window.setTimeout(() => { if (waitingTurn.current) { waitingTurn.current = false; setBusy(null); } }, 4000);
     } catch (e) {
       waitingTurn.current = false;
       setBusy(null);
-      setError((e as Error).message === "too short" ? "Hold a little longer while you speak." : "The hub didn't answer. Try again in a moment.");
+      if (my !== gen.current) return;
+      if ((e as Error).message === "too short") setError("Speak a little longer before you tap Send.");
+      else {
+        // The hub couldn't turn speech into text (no Groq key or no internet): the browser listens from now on.
+        hubCantListen = true;
+        setError(SR ? "The hub couldn't hear that, so this browser will listen now. Tap Listen and say it again." : "The hub didn't answer. Type below instead.");
+      }
     }
   }, []);
 
+  /** Stop everything: listening (nothing is sent), thinking (the answer is dropped) and speaking. */
   const cancel = useCallback(() => {
+    gen.current++;
+    waitingTurn.current = false;
     talk.current?.cancel();
     talk.current = null;
-    rec.current?.stop();
+    const r = rec.current;
+    if (r) { r.onend = null; r.onresult = null; r.stop(); rec.current = null; }
     stopSpeaking();
     setBusy(null);
   }, []);
+
+  const pause = useCallback(() => pauseSpeaking(), []);
+  const resume = useCallback(() => resumeSpeaking(), []);
+  /** Say the last reply again. */
+  const replay = useCallback(() => { if (!busy) void replayLast(); }, [busy]);
 
   useEffect(() => () => { talk.current?.cancel(); stopSpeaking(); }, []);
 
   const phase: Phase = busy ?? (speaking ? "speaking" : "idle");
   const level = useCallback(() => (busy === "listening" ? micLevel.current() : outputLevel()), [busy]);
 
-  return { phase, level, heard, reply, crisis, error, start, stop, cancel, say: answer };
+  return { phase, paused, level, heard, reply, crisis, error, start, stop, cancel, pause, resume, replay, say: answer };
 }

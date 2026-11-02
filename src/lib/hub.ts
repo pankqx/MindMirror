@@ -222,6 +222,22 @@ function setSpeaking(v: boolean) {
   isSpeaking = v;
   speakingSubs.forEach((f) => f());
 }
+// Pause and "say it again" for the reply that is speaking (or just spoke).
+let paused = false;
+const pausedSubs = new Set<() => void>();
+const setPaused = (v: boolean) => { paused = v; pausedSubs.forEach((f) => f()); };
+export function usePaused() {
+  return useSyncExternalStore(
+    (f) => {
+      pausedSubs.add(f);
+      return () => pausedSubs.delete(f);
+    },
+    () => paused,
+  );
+}
+let lastBlob: Blob | null = null;
+let lastText = "";
+
 export function useSpeaking() {
   return useSyncExternalStore(
     (f) => {
@@ -239,7 +255,7 @@ let browserVoice = false;
 
 /** 0..1 loudness of the reply being spoken right now. */
 export function outputLevel() {
-  if (!isSpeaking) return 0;
+  if (!isSpeaking || paused) return 0;
   if (browserVoice || !outAnalyser) {
     // The browser's own voice gives no audio stream, so fake a natural talking rhythm.
     const t = performance.now() / 1000;
@@ -256,6 +272,8 @@ async function playBlob(blob: Blob) {
   if ("speechSynthesis" in window) speechSynthesis.cancel();
   const a = new Audio(URL.createObjectURL(blob));
   speaking = a;
+  lastBlob = blob;
+  setPaused(false);
   browserVoice = false;
   try {
     ctx ??= new AudioContext();
@@ -268,7 +286,8 @@ async function playBlob(blob: Blob) {
     /* plays without the level meter */
   }
   setSpeaking(true);
-  a.onended = a.onpause = () => setSpeaking(false);
+  a.onended = () => { setPaused(false); setSpeaking(false); };
+  a.onpause = () => { if (!paused) setSpeaking(false); };
   await a.play();
 }
 
@@ -287,6 +306,9 @@ export async function speakReply(text: string, audioPath?: string) {
 export function speakWithBrowser(text: string): Promise<void> {
   if (!("speechSynthesis" in window)) return Promise.resolve();
   speechSynthesis.cancel();
+  lastText = text;
+  lastBlob = null;
+  setPaused(false);
   const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
   u.voice = voices.find((v) => v.lang === "en-IN") ?? voices.find((v) => v.lang.startsWith("en")) ?? null;
@@ -298,7 +320,27 @@ export function speakWithBrowser(text: string): Promise<void> {
   });
 }
 
+/** Pause the reply mid-sentence; resumeSpeaking() carries on from there. */
+export function pauseSpeaking() {
+  if (!isSpeaking || paused) return;
+  setPaused(true);
+  if (browserVoice) speechSynthesis.pause();
+  else speaking?.pause();
+}
+export function resumeSpeaking() {
+  if (!paused) return;
+  setPaused(false);
+  if (browserVoice) speechSynthesis.resume();
+  else void speaking?.play();
+}
+/** Say the last reply again, from the start. */
+export async function replayLast(): Promise<void> {
+  if (lastBlob) return playBlob(lastBlob);
+  if (lastText) return speakWithBrowser(lastText);
+}
+
 export function stopSpeaking() {
+  setPaused(false);
   speaking?.pause();
   if ("speechSynthesis" in window) speechSynthesis.cancel();
   setSpeaking(false);

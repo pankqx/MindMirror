@@ -21,6 +21,19 @@ const readWho = (): Who => {
     return "reenu";
   }
 };
+/** A round control with a small label under it. */
+function Ctl({ label, onClick, disabled, on, children }: { label: string; onClick: () => void; disabled?: boolean; on?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="flex w-12 flex-col items-center gap-1.5">
+      <motion.button onClick={onClick} disabled={disabled} aria-label={label} title={label} whileTap={disabled ? undefined : { scale: 0.9 }}
+        className={`grid h-12 w-12 place-items-center rounded-full transition-colors disabled:cursor-default disabled:opacity-35 ${on ? "bg-white text-black" : "mm-glass text-ink hover:bg-white/10"}`}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+      </motion.button>
+      <span className="whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.1em] text-faint">{label}</span>
+    </div>
+  );
+}
+
 const STATE: Record<string, CharState> = { idle: "IDLE", listening: "LISTENING", thinking: "THINKING", speaking: "SPEAKING" };
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -109,16 +122,16 @@ export default function FaceMode({ go }: { go: Go }) {
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
   }, []);
 
-  const tap = () => {
+  /** Listen → Send; while they talk, Talk back interrupts and listens. */
+  const main = () => {
     if (c.phase === "listening") void c.stop();
-    else if (c.phase === "speaking") c.cancel();
-    else if (c.phase === "idle") void c.start();
+    else if (c.phase === "idle" || c.phase === "speaking") void c.start();
   };
 
-  const status = c.error || { idle: "Tap Talk, or hold Space, and say what's on your mind.", listening: `${displayName} is listening…`, thinking: `${displayName} is thinking…`, speaking: "" }[c.phase];
+  const status = c.error || { idle: "Tap Listen, or hold Space, and say what's on your mind.", listening: `${displayName} is listening…`, thinking: `${displayName} is thinking…`, speaking: "" }[c.phase];
 
   return (
-    <div className="night fixed inset-0 z-50 overflow-hidden text-ink" style={{ background: "#07060a" }}>
+    <div className="night fixed inset-0 z-50 overflow-clip text-ink" style={{ background: "#07060a" }}>
       <Cursor />
       {/* the room: a dark stage with a warm wooden floor */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -174,25 +187,24 @@ export default function FaceMode({ go }: { go: Go }) {
         </p>
       </motion.div>
 
-      {/* heard + reply */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-[132px] z-10 px-4 text-center">
-        <AnimatePresence mode="wait">
-          {c.reply && c.phase !== "listening" ? (
-            <motion.div key={c.reply} exit={{ opacity: 0, y: -8 }} className="mm-glass mx-auto max-w-2xl rounded-3xl px-6 py-4" style={{ background: "rgba(10,10,16,0.62)" }}>
-              {c.heard && <p className="mb-3 text-[13px] italic text-faint">“{c.heard}”</p>}
-              <Spoken text={c.reply} className="mx-auto max-w-2xl font-display text-[1.55rem] leading-snug lg:text-[2.1rem]" />
-            </motion.div>
-          ) : (
-            <motion.p key={c.phase + c.error} className="mm-glass mx-auto w-fit rounded-full px-4 py-2 text-[13px] text-soft" style={{ background: "rgba(10,10,16,0.62)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {c.phase === "listening" && c.heard ? `“${c.heard}”` : status}
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </div>
-
       {c.crisis && <div className="absolute inset-x-4 top-24 z-20 mx-auto max-w-lg"><UrgentHelp /></div>}
 
       <div className="absolute inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-5 lg:bottom-8">
+        {/* heard + reply, right above the controls */}
+        <div className="pointer-events-auto w-full text-center">
+        <AnimatePresence mode="wait">
+            {c.reply && c.phase !== "listening" ? (
+              <motion.div key={c.reply} exit={{ opacity: 0, y: -8 }} className="mm-glass mx-auto max-h-[30vh] max-w-2xl overflow-y-auto rounded-3xl px-5 py-3 sm:px-6 sm:py-4" style={{ background: "rgba(10,10,16,0.62)" }}>
+                {c.heard && <p className="mb-3 text-[13px] italic text-faint">“{c.heard}”</p>}
+                <Spoken text={c.reply} className="mx-auto max-w-2xl font-display text-[1.2rem] leading-snug sm:text-[1.55rem] lg:text-[2.1rem]" />
+              </motion.div>
+            ) : (
+              <motion.p key={c.phase + c.error} className="mm-glass mx-auto w-fit rounded-full px-4 py-2 text-[13px] text-soft" style={{ background: "rgba(10,10,16,0.62)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                {c.phase === "listening" && c.heard ? `“${c.heard}”` : status}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
         <AnimatePresence>
           {typing && (
             <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
@@ -204,23 +216,39 @@ export default function FaceMode({ go }: { go: Go }) {
             </motion.form>
           )}
         </AnimatePresence>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setTyping((v) => !v)} aria-label="Type instead"
-            className="mm-glass grid h-12 w-12 place-items-center rounded-full text-soft transition-colors hover:text-ink">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8" /></svg>
-          </button>
-          <motion.button onClick={tap} whileTap={{ scale: 0.94 }}
-            className={`relative flex h-14 items-center gap-2 overflow-hidden rounded-full px-7 text-[15px] font-semibold transition-colors ${c.phase === "listening" ? "bg-white text-black" : "mm-glass text-ink hover:bg-white/10"}`}>
-            {c.phase === "listening" ? (<><span className="h-2.5 w-2.5 rounded-sm bg-black" /> Done</>)
-              : c.phase === "speaking" ? "Stop"
-              : c.phase === "thinking" ? "…"
-              : (<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg> Talk to {displayName}</>)}
-          </motion.button>
-          <button onClick={() => go("support")} aria-label="Real people"
-            className="mm-glass grid h-12 w-12 place-items-center rounded-full text-soft transition-colors hover:text-ink" title="Talk to a real person">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
-          </button>
+        {/* the controls: stop, pause, listen / send / talk back, say again, real people */}
+        <div className="flex max-w-full items-end gap-2 sm:gap-3">
+          <Ctl label="Stop" onClick={() => c.cancel()} disabled={c.phase === "idle"}>
+            <rect x="6.5" y="6.5" width="11" height="11" rx="2" />
+          </Ctl>
+          <Ctl label={c.paused ? "Resume" : "Pause"} onClick={() => (c.paused ? c.resume() : c.pause())} disabled={c.phase !== "speaking"} on={c.paused}>
+            {c.paused ? <path d="M8 5.5v13l10.5-6.5z" /> : <path d="M8.5 5.5v13M15.5 5.5v13" />}
+          </Ctl>
+          <div className="flex flex-col items-center gap-1.5">
+            <motion.button onClick={main} whileTap={{ scale: 0.94 }} disabled={c.phase === "thinking"}
+              className={`relative flex h-14 min-w-[118px] items-center justify-center gap-2 overflow-hidden rounded-full px-4 text-[14px] font-semibold sm:min-w-[150px] sm:px-6 sm:text-[15px] transition-colors disabled:opacity-70 ${c.phase === "listening" ? "bg-white text-black" : "mm-glass text-ink hover:bg-white/10"}`}>
+              {c.phase === "listening" && (
+                <motion.span className="absolute inset-0 rounded-full bg-black/5" animate={{ opacity: [0.2, 0.6, 0.2] }} transition={{ duration: 1.2, repeat: Infinity }} />
+              )}
+              {c.phase === "listening" ? (<><span className="relative h-2.5 w-2.5 rounded-full bg-[#e25b45]" /><span className="relative">Send</span></>)
+                : c.phase === "thinking" ? (<>Thinking…</>)
+                : (<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+                  {c.phase === "speaking" ? "Talk back" : "Listen"}</>)}
+            </motion.button>
+            <span className="whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
+              {c.phase === "listening" ? "listening…" : c.phase === "speaking" ? (c.paused ? "paused" : "talking") : "or hold Space"}
+            </span>
+          </div>
+          <Ctl label="Again" onClick={() => c.replay()} disabled={!c.reply || c.phase === "listening" || c.phase === "thinking"}>
+            <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.8h3.8" />
+          </Ctl>
+          <Ctl label="Help" onClick={() => go("support")}>
+            <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
+          </Ctl>
         </div>
+        <button onClick={() => setTyping((v) => !v)} className="text-[12px] text-soft underline decoration-white/20 underline-offset-4 hover:text-ink">
+          {typing ? "Hide typing" : `Or type to ${displayName}`}
+        </button>
         <p className="text-[11px] text-faint">{displayName} is an AI, not a licensed therapist or doctor. For a real person: Tele-MANAS 14416.</p>
       </div>
     </div>
