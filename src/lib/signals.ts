@@ -184,14 +184,34 @@ function driveSignal(c: Ctx): Signal {
   const baseline = median(c.base.map((x) => x.mood));
   const recent = mean(c.recent3.map((x) => x.mood));
   const diff = recent - baseline;
-  let level = levelDrop(diff, 0.75, 1.25);
-  let text = `Your mood was ${f1(recent)} of 5 the last ${c.recent3.length} days; your usual is ${f1(baseline)} (${signed(diff)}).`;
+  return {
+    key, name, icon, recent: r1(recent), baseline: r1(baseline),
+    level: levelDrop(diff, 0.75, 1.25),
+    text: `Your mood was ${f1(recent)} of 5 the last ${c.recent3.length} days; your usual is ${f1(baseline)} (${signed(diff)}).`,
+  };
+}
 
+// ---------- what you said out loud ----------
+
+// Every voice turn (necklace or voice mode) comes back from the hub tagged with
+// the topics it touched. Saying it counts too: once lifts the matching signal to
+// "watch", twice or more in 3 days to "needs care", and the proof says so.
+export const VOICE_TAG: Record<SignalKey, { tag: string; about: string }> = {
+  sleep: { tag: "sleep", about: "your sleep" },
+  pressure: { tag: "pressure", about: "pressure and deadlines" },
+  connection: { tag: "isolation", about: "feeling alone" },
+  energy: { tag: "energy", about: "feeling tired" },
+  drive: { tag: "motivation", about: "motivation" },
+};
+
+function withVoice(s: Signal, c: Ctx): Signal {
+  const { tag, about } = VOICE_TAG[s.key];
   const last3 = dateRange(c.today, 2, 0);
-  const tags = c.voice.filter((v) => last3.has(v.at.slice(0, 10)) && v.signals.includes("motivation")).length;
-  if (tags > 0) text += ` You mentioned motivation ${tags} time${tags > 1 ? "s" : ""} to MindMirror in the last 3 days.`;
-  if (tags >= 2) level = "needs care";
-  return { key, name, icon, level, text, recent: r1(recent), baseline: r1(baseline) };
+  const n = c.voice.filter((v) => last3.has(v.at.slice(0, 10)) && v.signals.includes(tag)).length;
+  if (n === 0) return s;
+  const said = `You told MindMirror about ${about} ${n === 1 ? "once" : `${n} times`} in the last 3 days.`;
+  const level = worst(s.level === "learning" ? "steady" : s.level, n >= 2 ? "needs care" : "watch");
+  return { ...s, level, text: `${s.text} ${said}` };
 }
 
 // ---------- weather ----------
@@ -225,7 +245,7 @@ export function computeInsights(
     voice,
     tasks,
   };
-  const signals = [sleepSignal(ctx), pressureSignal(ctx), connectionSignal(ctx), energySignal(ctx), driveSignal(ctx)];
+  const signals = [sleepSignal(ctx), pressureSignal(ctx), connectionSignal(ctx), energySignal(ctx), driveSignal(ctx)].map((s) => withVoice(s, ctx));
   const score = scoreOf(signals);
   const { weather, title } = weatherFor(score);
 

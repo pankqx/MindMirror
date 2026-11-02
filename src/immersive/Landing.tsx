@@ -71,9 +71,14 @@ function Door({ title, line, onClick, glyph, onHover, tone }: {
   );
 }
 
-const MoonGlyph = () => (
+const EyeGlyph = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z" /><circle cx="12" cy="12" r="2.8" />
+  </svg>
+);
+const VoiceGlyph = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+    <path d="M4 12h1M7.5 8.5v7M11 5v14M14.5 8v8M18 10.5v3M20.5 12H20" />
   </svg>
 );
 const FaceGlyph = () => (
@@ -139,14 +144,14 @@ export default function Landing({ go }: { go: Go }) {
     };
   }, [mx, my]);
 
-  async function enter(to: "voice" | "face" | "checkin" | "home") {
+  async function enter(to: "preview" | "voice" | "face" | "checkin" | "home") {
     unlockAudio();
-    if (!prefs.welcomed) {
-      const empty = (await db.checkins.count()) === 0;
-      if (empty && to === "home") await loadSample();
-      setPrefs({ welcomed: true, name: name.trim() || prefs.name });
-    } else if (name.trim()) setPrefs({ name: name.trim() });
-    go(to);
+    const empty = (await db.checkins.count()) === 0;
+    // Preview: look around first, with Asha's three weeks if there is nothing of yours yet.
+    if (empty && (to === "preview" || (to === "home" && !prefs.welcomed))) await loadSample();
+    if (!prefs.welcomed) setPrefs({ welcomed: true, name: name.trim() || prefs.name });
+    else if (name.trim()) setPrefs({ name: name.trim() });
+    go(to === "preview" ? "home" : to);
   }
 
   const scrollTo = (i: number) => window.scrollTo({ top: i * window.innerHeight, behavior: "smooth" });
@@ -244,16 +249,25 @@ export default function Landing({ go }: { go: Go }) {
               initial="hidden" whileInView="show" viewport={{ amount: 0.25, once: true }}
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}>
               {[
-                { to: "voice" as const, title: "I'm exhausted", line: "Just talk. A calm voice listens and answers, like a call with a friend.", glyph: <MoonGlyph />, tone: "#6c7bff" },
-                { to: "face" as const, title: "Talk face to face", line: "Meet Mira, a companion made of light, who looks at you and talks back.", glyph: <FaceGlyph />, tone: "#ff9e80" },
-                { to: "checkin" as const, title: "Quick check-in", line: "Thirty seconds, five sliders. See where you are against your own normal.", glyph: <PulseGlyph />, tone: "#7fe0d0" },
+                { to: "preview" as const, title: "Preview", line: "Look around first. A sample three weeks shows how MindMirror notices you drifting.", glyph: <EyeGlyph />, tone: "#7fe0d0" },
+                { to: "voice" as const, title: "Voice mode", line: "Just talk, to your phone or your necklace. A calm voice answers, and it counts.", glyph: <VoiceGlyph />, tone: "#6c7bff" },
+                { to: "checkin" as const, title: "Check-in", line: "Thirty seconds, five sliders. See where you are against your own normal.", glyph: <PulseGlyph />, tone: "#ff9e80" },
               ].map((d) => (
                 <motion.div key={d.to} variants={{ hidden: { opacity: 0, y: 40, filter: "blur(8px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.9, ease } } }}>
                   <Door {...d} onClick={() => void enter(d.to)} onHover={(on) => field.current?.setPulse(on ? 0.6 : 0)} />
                 </motion.div>
               ))}
             </motion.div>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-faint">
+            <motion.div className="mt-8 flex justify-center" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ delay: 0.6, duration: 0.8, ease }}>
+              <button onClick={() => void enter("face")} data-cursor="open"
+                className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 px-4 py-2 text-[13px] text-soft transition-colors hover:border-white/30 hover:text-ink">
+                <span className="text-[#ff9e80]"><FaceGlyph /></span>
+                or talk face to face with Mira
+                <span className="transition-transform group-hover:translate-x-1">→</span>
+              </button>
+            </motion.div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-faint">
               <button onClick={() => void enter("home")} className="underline-offset-4 hover:text-ink hover:underline">Open my mirror</button>
               <span className="flex items-center gap-2">
                 <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-[#8dbba6]" : "bg-white/25"}`} />

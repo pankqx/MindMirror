@@ -13,6 +13,7 @@ import { usePrefs } from "../lib/prefs";
 import { loadSample } from "../lib/sample";
 import { streak } from "../lib/series";
 import { useInsights } from "../lib/useInsights";
+import { useFresh } from "../lib/fresh";
 import UrgentHelp from "./UrgentHelp";
 import { Cloth } from "../components/shisha/Cloth";
 import { weave } from "../components/shisha/cloth";
@@ -55,6 +56,7 @@ export function Row({ onClick, icon, title, meta, right }: { onClick: () => void
 export default function Home({ go }: { go: Go }) {
   const { name } = usePrefs();
   const ins = useInsights();
+  const fresh = useFresh();
   const thinking = useThinking();
   const lastTurn = useLiveQuery(() => db.voice.orderBy("at").last(), []);
   const checkins = useLiveQuery(() => db.checkins.toArray(), []);
@@ -140,9 +142,12 @@ export default function Home({ go }: { go: Go }) {
                 {ins.signals.map((s, i) => (
                   <motion.button key={s.key} onClick={() => go("insights")}
                     initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.05, duration: 0.4 }}
-                    className="flex w-full items-center gap-4 border-b border-line py-3.5 text-left last:border-b-0">
-                    <SignalGlyph k={s.key} size={22} className="text-ink" />
-                    <span className="flex-1 text-[15px] font-medium">{s.name}</span>
+                    className={`flex w-full items-center gap-4 border-b border-line py-3.5 text-left last:border-b-0 ${fresh.keys.has(s.key) ? "mm-fresh my-1 border-b-0 px-3" : ""}`}>
+                    <SignalGlyph k={s.key} size={22} className={fresh.keys.has(s.key) ? "text-indigo" : "text-ink"} />
+                    <span className="flex-1 text-[15px] font-medium">
+                      {s.name}
+                      {fresh.keys.has(s.key) && <span className="ml-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo">just heard</span>}
+                    </span>
                     <span className="flex items-center gap-2 text-[13px] text-soft">
                       <span className="h-2 w-2 rounded-full" style={{ background: LEVEL_COLOR[s.level] }} />
                       {s.level}

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import type { Point } from "../lib/series";
+import { HeardNote } from "./Heard";
 import { Pill, spring } from "./ui";
 
 // Kishore's signal card: name, level and the proof sentence.
@@ -18,6 +19,8 @@ type SignalCardProps = {
   tip?: string;
   /** Higher is worse (stress). Used to colour the trend. */
   invert?: boolean;
+  /** The latest voice turn touched this signal: what was said, and where. */
+  heard?: { text: string; source: "necklace" | "web" } | null;
 };
 
 const tone = { steady: "sage", watch: "sun", "needs care": "coral", learning: "neutral" } as const;
@@ -54,12 +57,12 @@ export function Sparkline({ series, baseline, level }: { series: Point[]; baseli
   );
 }
 
-export default function SignalCard({ name, icon, level, proof, series, baseline, tip }: SignalCardProps) {
+export default function SignalCard({ name, icon, level, proof, series, baseline, tip, heard }: SignalCardProps) {
   const [open, setOpen] = useState(false);
   const canOpen = !!tip && level !== "learning";
 
   return (
-    <motion.div layout transition={spring} className="border-b border-line last:border-b-0">
+    <motion.div layout transition={spring} className={`border-b border-line last:border-b-0 ${heard ? "mm-fresh my-2 border-b-0 px-4" : ""}`}>
       <button type="button" disabled={!canOpen} onClick={() => setOpen((o) => !o)} aria-expanded={open}
         className="group block w-full py-5 text-left">
         <div className="flex items-center justify-between gap-3">
@@ -76,6 +79,7 @@ export default function SignalCard({ name, icon, level, proof, series, baseline,
           {series && level !== "learning" && <Sparkline series={series} baseline={baseline} level={level} />}
         </div>
 
+        {heard && <HeardNote text={heard.text} source={heard.source} />}
         <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-soft">{proof}</p>
         {canOpen && !open && <p className="mt-2 text-[13px] font-medium text-faint transition-colors group-hover:text-indigo">One small thing to try</p>}
       </button>

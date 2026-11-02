@@ -1,7 +1,8 @@
 // Three weeks of "Asha" drifting, so the demo doesn't need two weeks of real data.
 // Her usual: about 7 h sleep, mood 4, stress 2, energy 4, connected most days.
 // The last 3 days: short nights (5.4 h), a bit more stress, a bit less energy.
-// The engine should show Sleep "needs care", Pressure and Energy "watch": Soft rain.
+// The engine should show Sleep "needs care", Pressure, Energy and Drive "watch": Soft rain.
+// (Drive watches because she told the necklace she does not feel like going to class.)
 
 import { addDays } from "./signals";
 import { db, localDate, type CheckIn, type Task, type VoiceTurn } from "./db";
