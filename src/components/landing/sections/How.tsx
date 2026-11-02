@@ -32,7 +32,7 @@ export function How({ onSample }: { onSample: () => void }) {
   }, [inView]);
 
   return (
-    <section id="how" className="bg-paper px-4 py-18 text-coal lg:px-20 lg:py-40">
+    <div className="weave bg-khadi px-4 py-18 text-neel lg:px-20 lg:py-40">
       <div className="mb-10 flex flex-col gap-4 lg:mb-16 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-col gap-5">
           <p className="t-caption">{HOW.eyebrow}</p>
@@ -43,8 +43,8 @@ export function How({ onSample }: { onSample: () => void }) {
         </p>
       </div>
 
-      <motion.div ref={box} style={lg && !reduce ? { scale } : undefined} className="origin-top rounded-[8px] bg-coal p-1.5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)] ring-1 ring-black lg:p-2">
-        <div className="flex flex-col overflow-hidden rounded-[4px] bg-[#1b1b1b] text-white lg:min-h-[600px]">
+      <motion.div ref={box} style={lg && !reduce ? { scale } : undefined} className="origin-top rounded-[8px] bg-neel p-1.5 shadow-[0_40px_90px_-40px_rgba(23,27,56,0.6)] ring-1 ring-neel lg:p-2">
+        <div className="flex flex-col overflow-hidden rounded-[4px] bg-neel-deep text-white lg:min-h-[600px]">
           {/* title bar */}
           <div className="t-caption-sm flex h-11 items-center justify-between border-b border-white/10 px-4 text-white/45">
             <span className="flex items-center gap-1.5" aria-hidden="true">
@@ -63,7 +63,7 @@ export function How({ onSample }: { onSample: () => void }) {
                 {HOW.steps.map((s, k) => (
                   <li key={s.file} className="shrink-0">
                     <button onClick={() => setI(k)} aria-current={k === i ? "step" : undefined}
-                      className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left transition-colors lg:py-1.5 lg:pl-10 ${k === i ? "bg-white/[0.06] text-glow" : "text-white/55 hover:bg-white/[0.04] hover:text-white"}`}>
+                      className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left transition-colors lg:py-1.5 lg:pl-10 ${k === i ? "bg-white/[0.06] text-rani" : "text-white/55 hover:bg-white/[0.04] hover:text-white"}`}>
                       <span className="flex size-2 items-center justify-center">{k === i && <Ping />}</span>
                       {s.file}
                     </button>
@@ -87,14 +87,14 @@ export function How({ onSample }: { onSample: () => void }) {
                     {step.body.map((b) => <p key={b} className="t-body-lg text-mist/75">{b}</p>)}
                   </div>
                   {step.code && (
-                    <div className="mt-8 max-w-[62ch] overflow-hidden rounded-[4px] border border-white/10 bg-coal-deep">
+                    <div className="mt-8 max-w-[62ch] overflow-hidden rounded-[4px] border border-white/10 bg-neel-deep">
                       <p className="t-caption-sm border-b border-white/10 px-4 py-2 text-white/40">{step.code.lang}</p>
                       <pre className="no-scrollbar overflow-x-auto px-4 py-4 font-[family-name:var(--font-geist-mono)] text-[12.5px] leading-[1.8] text-white/85 lg:text-[13.5px]">
                         {step.code.lines.map((l, k) => (
                           <motion.span key={k} className="block min-h-[1.8em]" initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.15 + k * 0.07, duration: 0.3 }}>
                             {l.replace(/(needs care|soft rain|−1\.6 h)/g, "\u0000$1\u0000").split("\u0000").map((part, j) =>
-                              j % 2 ? <span key={j} className="text-glow">{part}</span> : part)}
+                              j % 2 ? <span key={j} className="text-rani">{part}</span> : part)}
                           </motion.span>
                         ))}
                       </pre>
@@ -115,10 +115,10 @@ export function How({ onSample }: { onSample: () => void }) {
               <span className="text-white/40">{HOW.terminal.path} › </span>{HOW.terminal.cmd}
               <span className="text-white/35">{"   # "}{HOW.terminal.comment}</span>
             </p>
-            <Btn tone="paper" onClick={onSample}>{HOW.terminal.cta}</Btn>
+            <Btn tone="khadi" onClick={onSample}>{HOW.terminal.cta}</Btn>
           </div>
         </div>
       </motion.div>
-    </section>
+    </div>
   );
 }

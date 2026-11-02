@@ -2,13 +2,15 @@
 // Rule: only claim what the app actually does. Prototype parts say so.
 
 import type { Screen } from "../lib/nav";
+import { THREAD } from "../components/shisha/palette";
 
 export const NAV = [
   { id: "top", label: "Home" },
-  { id: "features", label: "Features" },
+  { id: "companion", label: "Companion" },
+  { id: "normal", label: "Your normal" },
   { id: "how", label: "How it works" },
-  { id: "insights", label: "Insights" },
-  { id: "about", label: "About" },
+  { id: "features", label: "Features" },
+  { id: "about", label: "Privacy" },
 ] as const;
 
 export const TICKER = [
@@ -20,12 +22,12 @@ export const TICKER = [
 ];
 
 export const HERO = {
-  eyebrow: "A mirror for student minds.",
+  eyebrow: "Mind Check · for students",
   title: "Understand yourself.\nBefore you lose yourself.",
   body: "Your personal space to understand emotions, recognise patterns, manage stress and build a healthier relationship with yourself.",
   primary: "Get started",
-  secondary: "Explore MindMirror",
-  cue: "Scroll to dive in",
+  secondary: "Meet your companion",
+  cue: "Scroll into the mirror",
   // the words that circle the mirror in the hero
   vortex: "UNDERSTAND YOURSELF · MOOD · SLEEP · STRESS · ENERGY · PEOPLE · YOUR NORMAL, NOT ANYONE ELSE'S · NOTICE THE DRIFT · BREATHE IN 4, OUT 6 · ",
 };
@@ -47,6 +49,17 @@ export const PROBLEM = {
     { day: "Sun", rows: [["Dread before Monday", "Burnout"]] },
   ] as { day: string; rows: [string, string][] }[],
   ledgerEnd: ["Signals heard", "0"],
+};
+
+export const NORMAL = {
+  eyebrow: "Your normal",
+  title: "Compared with you.\nNever with anyone else.",
+  body: "Every check-in becomes one mirror on your cloth. The thread shows how far that day sat from your own usual: green when you're you, yellow when you drift, red-orange when it's far. This is Asha, the student in our sample data, three weeks in.",
+  engine: "What the signal engine says about Asha",
+  proof: "The proof it shows her",
+  clothTitle: "Asha's last 21 days",
+  legend: [["Steady", THREAD.mehendi], ["Drifting", THREAD.haldi], ["Far from usual", THREAD.sindoor], ["Learning", THREAD.khadi]] as [string, string][],
+  note: "Bigger mirror = longer sleep. More petals = more energy. Sample data, worked out live in this page.",
 };
 
 export interface Feature {

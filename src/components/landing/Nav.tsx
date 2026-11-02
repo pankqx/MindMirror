@@ -7,21 +7,31 @@ import { NAV, TICKER } from "../../content/landing";
 import { Mark, Ping } from "./kit";
 import { ease, scrollToId } from "./motion";
 
+/** The section under the middle of the screen, worked out from the rooms' anchors
+ *  (the rooms themselves are sticky, so their own boxes can't be trusted). */
 function useActive(ids: readonly string[]) {
   const [active, setActive] = useState<string>("top");
   useEffect(() => {
-    const els = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
-    }, { rootMargin: "-45% 0px -50% 0px" });
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    const on = () => {
+      const mid = window.scrollY + window.innerHeight * 0.5;
+      let cur = "top";
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top + window.scrollY <= mid) cur = id;
+      }
+      setActive(cur);
+    };
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
   }, [ids]);
   return active;
 }
 
+const IDS = NAV.map((n) => n.id);
+
 export function Nav({ onStart }: { onStart: () => void }) {
-  const active = useActive(NAV.map((n) => n.id));
+  const active = useActive(IDS);
   const [open, setOpen] = useState(false);
   const go = (id: string) => { setOpen(false); scrollToId(id); };
   const tick = TICKER.join("  ·  ") + "  ·  ";
@@ -36,7 +46,7 @@ export function Nav({ onStart }: { onStart: () => void }) {
   return (
     <>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-start p-4 lg:justify-center lg:p-6">
-        <motion.nav aria-label="Landing" className="pointer-events-auto overflow-hidden rounded-[4px] bg-coal text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
+        <motion.nav aria-label="Landing" className="pointer-events-auto overflow-hidden rounded-[4px] bg-neel text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
           initial={{ y: -24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.9, ease, delay: 0.2 }}>
           <div className="flex h-11 items-center gap-1 pl-1.5 pr-1.5">
             <button onClick={() => go("top")} aria-label="MindMirror, back to top" className="grid size-8 place-items-center rounded-[3px] bg-white/[0.06] hover:bg-white/10">
@@ -48,13 +58,13 @@ export function Nav({ onStart }: { onStart: () => void }) {
                 <li key={n.id}>
                   <button onClick={() => go(n.id)} aria-current={active === n.id ? "true" : undefined}
                     className={`t-caption-sm relative px-3 py-2 transition-colors hover:text-white ${active === n.id ? "text-white" : "text-white/55"}`}>
-                    {active === n.id && <motion.span layoutId="lp-nav-dot" className="absolute left-1/2 top-0.5 size-1 -translate-x-1/2 rounded-full bg-glow" />}
+                    {active === n.id && <motion.span layoutId="lp-nav-dot" className="absolute left-1/2 top-0.5 size-1 -translate-x-1/2 rounded-full bg-rani" />}
                     {n.label}
                   </button>
                 </li>
               ))}
             </ul>
-            <button onClick={onStart} className="t-caption-sm ml-1 hidden h-8 items-center rounded-[3px] bg-paper px-3 text-coal transition-colors hover:bg-glow lg:flex">
+            <button onClick={onStart} className="t-caption-sm ml-1 hidden h-8 items-center rounded-[3px] bg-khadi px-3 text-neel transition-colors hover:bg-rani lg:flex">
               Get started
             </button>
             <button onClick={() => setOpen(true)} className="t-caption-sm ml-2 flex h-8 items-center px-2 text-white lg:hidden" aria-expanded={open} aria-controls="lp-menu">
@@ -63,7 +73,7 @@ export function Nav({ onStart }: { onStart: () => void }) {
           </div>
           {/* status ticker */}
           <div className="relative hidden h-6 w-0 min-w-full items-center overflow-hidden border-t border-white/10 lg:flex" aria-hidden="true">
-            <span className="absolute left-2 z-10 flex items-center bg-coal pr-2"><Ping /></span>
+            <span className="absolute left-2 z-10 flex items-center bg-neel pr-2"><Ping /></span>
             <div className="lp-ticker t-caption-sm flex w-max whitespace-nowrap pl-6 text-[10.5px] text-white/45">
               <span>{tick}</span><span>{tick}</span>
             </div>
@@ -73,7 +83,7 @@ export function Nav({ onStart }: { onStart: () => void }) {
 
       <AnimatePresence>
         {open && (
-          <motion.div id="lp-menu" role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[60] flex flex-col bg-coal px-4 pb-8 pt-4 text-white"
+          <motion.div id="lp-menu" role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[60] flex flex-col bg-neel px-4 pb-8 pt-4 text-white"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
             <div className="flex h-11 items-center justify-between">
               <span className="flex items-center gap-2"><Mark size={18} /><span className="t-caption">MindMirror</span></span>
@@ -90,7 +100,7 @@ export function Nav({ onStart }: { onStart: () => void }) {
                 </motion.li>
               ))}
             </ul>
-            <button onClick={() => { setOpen(false); onStart(); }} className="t-caption mt-auto flex h-12 items-center justify-center rounded-[3px] bg-paper text-coal">
+            <button onClick={() => { setOpen(false); onStart(); }} className="t-caption mt-auto flex h-12 items-center justify-center rounded-[3px] bg-khadi text-neel">
               Get started
             </button>
             <a href="tel:14416" className="t-caption-sm mt-4 text-center text-white/55">Not okay right now? Tele-MANAS 14416, free, 24x7</a>

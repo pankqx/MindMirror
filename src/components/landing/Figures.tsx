@@ -3,9 +3,9 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-const S = "rgba(241,238,231,0.85)";
-const F = "rgba(241,238,231,0.35)";
-const G = "#a9b0ff";
+const S = "rgba(241,235,223,0.85)";
+const F = "rgba(241,235,223,0.35)";
+const G = "#e46a9a";
 const loop = { repeat: Infinity, repeatType: "mirror" as const, ease: "easeInOut" as const };
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ function CheckIns({ r }: { r: boolean }) {
           <g key={l}>
             <text x="30" y={y - 7} fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">{l}</text>
             <line x1="30" x2="170" y1={y} y2={y} stroke={F} />
-            <motion.circle cy={y} r="4.5" fill="#232323" stroke={i === 1 ? G : S}
+            <motion.circle cy={y} r="4.5" fill="#171b38" stroke={i === 1 ? G : S}
               initial={{ cx: 30 + v * 140 }} animate={r ? {} : { cx: [30 + v * 140, 30 + Math.max(0.1, v - 0.25) * 140] }}
               transition={{ ...loop, duration: 2.4 + i * 0.3, delay: i * 0.2 }} />
           </g>
@@ -40,7 +40,7 @@ function Insights({ r }: { r: boolean }) {
   const pts = [0.62, 0.6, 0.66, 0.61, 0.63, 0.59, 0.64, 0.4, 0.34, 0.3];
   return (
     <Frame>
-      <rect x="28" y="70" width="144" height="26" fill="rgba(169,176,255,0.08)" stroke="none" />
+      <rect x="28" y="70" width="144" height="26" fill="rgba(228,106,154,0.08)" stroke="none" />
       <line x1="28" x2="172" y1="83" y2="83" stroke={F} strokeDasharray="2 3" />
       {pts.map((v, i) => {
         const x = 34 + i * 15;
@@ -81,7 +81,7 @@ function Breathing({ r }: { r: boolean }) {
       <circle cx="100" cy="100" r="70" stroke={F} strokeDasharray="1 4" />
       <motion.circle cx="100" cy="100" stroke={G} initial={{ r: 30 }}
         animate={r ? { r: 45 } : { r: [30, 62, 62, 30] }} transition={{ repeat: Infinity, duration: 10, times: [0, 0.4, 0.42, 1], ease: "easeInOut" }} />
-      <motion.circle cx="100" cy="100" fill="rgba(169,176,255,0.12)" stroke="none" initial={{ r: 26 }}
+      <motion.circle cx="100" cy="100" fill="rgba(228,106,154,0.12)" stroke="none" initial={{ r: 26 }}
         animate={r ? { r: 40 } : { r: [26, 56, 56, 26] }} transition={{ repeat: Infinity, duration: 10, times: [0, 0.4, 0.42, 1], ease: "easeInOut" }} />
       <text x="100" y="186" textAnchor="middle" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">IN 4 · OUT 6</text>
     </Frame>
@@ -94,7 +94,7 @@ function Journal({ r }: { r: boolean }) {
       <rect x="44" y="34" width="112" height="136" rx="2" />
       <line x1="58" x2="58" y1="34" y2="170" stroke={F} />
       {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <line key={i} x1="66" x2="146" y1={58 + i * 15} y2={58 + i * 15} stroke="rgba(241,238,231,0.12)" />
+        <line key={i} x1="66" x2="146" y1={58 + i * 15} y2={58 + i * 15} stroke="rgba(241,235,223,0.12)" />
       ))}
       {[[66, 140], [66, 128], [66, 110]].map(([a, b], i) => (
         <motion.line key={i} x1={a} y1={56 + i * 15} y2={56 + i * 15} stroke={i === 0 ? G : S}
@@ -113,7 +113,7 @@ function Planner({ r }: { r: boolean }) {
         const on = filled.includes(i);
         return (
           <motion.rect key={i} x={x} y={y} width="16" height="20" rx="1.5"
-            stroke={on ? G : F} fill={on ? "rgba(169,176,255,0.15)" : "none"}
+            stroke={on ? G : F} fill={on ? "rgba(228,106,154,0.15)" : "none"}
             initial={{ opacity: on ? 0 : 1 }} animate={{ opacity: 1 }} transition={{ delay: r ? 0 : 0.2 + filled.indexOf(i) * 0.15 }} />
         );
       })}
@@ -174,7 +174,7 @@ function Patterns({ r }: { r: boolean }) {
   const d = "M 24 100 C 40 92, 52 106, 66 98 S 92 94, 104 100 S 128 104, 138 98 S 150 118, 160 132 S 172 146, 178 150";
   return (
     <Frame>
-      <rect x="24" y="86" width="154" height="26" fill="rgba(241,238,231,0.05)" stroke="none" />
+      <rect x="24" y="86" width="154" height="26" fill="rgba(241,235,223,0.05)" stroke="none" />
       <line x1="24" x2="178" y1="99" y2="99" stroke={F} strokeDasharray="2 3" />
       <motion.path d={d} stroke={G} initial={{ pathLength: r ? 1 : 0 }} animate={{ pathLength: 1 }}
         transition={r ? { duration: 0 } : { duration: 2.4, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.2 }} />

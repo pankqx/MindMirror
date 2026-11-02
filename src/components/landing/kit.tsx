@@ -38,12 +38,12 @@ export function Fade({ children, className = "", delay = 0, y = 16 }: { children
   );
 }
 
-type Tone = "coal" | "paper" | "mist" | "glow" | "ghost";
+type Tone = "neel" | "khadi" | "mist" | "rani" | "ghost";
 const TONES: Record<Tone, string> = {
-  coal: "bg-coal text-paper",
-  paper: "bg-paper text-coal",
-  mist: "bg-mist text-coal",
-  glow: "bg-glow text-coal",
+  neel: "bg-neel text-khadi",
+  khadi: "bg-khadi text-neel",
+  mist: "bg-mist text-neel",
+  rani: "bg-rani text-neel",
   ghost: "bg-white/10 text-white",
 };
 
@@ -51,7 +51,7 @@ const TONES: Record<Tone, string> = {
  * The house button: the first word sits in its own block, the rest in a second, and on
  * hover each block rolls up to a fresh copy of itself, one after the other.
  */
-export function Btn({ children, onClick, href, tone = "coal", className = "", label }: {
+export function Btn({ children, onClick, href, tone = "neel", className = "", label }: {
   children: string; onClick?: () => void; href?: string; tone?: Tone; className?: string; label?: string;
 }) {
   // at most two blocks: the first word, then the rest ("Get / started", "Try / the sample")
@@ -81,7 +81,7 @@ export function Chip({ children, className = "" }: { children: ReactNode; classN
 }
 
 /** MindMirror's mark: a ring with half a moon of light. */
-export function Mark({ size = 22, ring = "currentColor", fill = "#a9b0ff" }: { size?: number; ring?: string; fill?: string }) {
+export function Mark({ size = 22, ring = "currentColor", fill = "#e46a9a" }: { size?: number; ring?: string; fill?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
       <circle cx="16" cy="16" r="13" fill="none" stroke={ring} strokeWidth="2" />
@@ -91,7 +91,7 @@ export function Mark({ size = 22, ring = "currentColor", fill = "#a9b0ff" }: { s
 }
 
 /** A live dot that pings. */
-export function Ping({ className = "bg-glow" }: { className?: string }) {
+export function Ping({ className = "bg-rani" }: { className?: string }) {
   return (
     <span className="relative flex size-1.5" aria-hidden="true">
       <span className={`lp-ping absolute inline-flex size-full rounded-full ${className}`} />

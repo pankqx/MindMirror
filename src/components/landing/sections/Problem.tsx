@@ -19,9 +19,9 @@ function Digit({ d }: { d: number }) {
 }
 
 const Fill = ({ ch }: { ch: string }) => (
-  <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-coal/30" aria-hidden="true">{ch.repeat(240)}</span>
+  <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-neel/30" aria-hidden="true">{ch.repeat(240)}</span>
 );
-const Edge = ({ ch }: { ch: string }) => <span className="text-coal/30" aria-hidden="true">{ch}</span>;
+const Edge = ({ ch }: { ch: string }) => <span className="text-neel/30" aria-hidden="true">{ch}</span>;
 
 function Rule({ l, m, r }: { l: string; m: string; r: string }) {
   return <div className="flex"><Edge ch={l} /><Fill ch={m} /><Edge ch={r} /></div>;
@@ -51,7 +51,7 @@ export function Problem() {
   useMotionValueEvent(q, "change", (v) => !reduce && setCount(Math.min(TOTAL, Math.floor(v * (TOTAL + 1.5)))));
 
   return (
-    <section id="signals" className="bg-paper px-4 py-18 text-coal lg:px-20 lg:py-40">
+    <div className="weave bg-khadi px-4 py-18 text-neel lg:px-20 lg:py-40">
       <div className="grid grid-cols-1 gap-x-4 gap-y-14 lg:grid-cols-12">
         <div className="flex flex-col gap-6 self-start lg:sticky lg:top-36 lg:col-span-5">
           <Lines text={PROBLEM.title} className="t-headline text-balance" />
@@ -63,7 +63,7 @@ export function Problem() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <span className="t-caption">{PROBLEM.counterLabel}</span>
-              <Chip className="bg-coal text-paper">{PROBLEM.chip}</Chip>
+              <Chip className="bg-neel text-khadi">{PROBLEM.chip}</Chip>
             </div>
           </div>
         </div>
@@ -87,13 +87,13 @@ export function Problem() {
               <Rule l="└" m="─" r="┘" />
             </motion.div>
             {!reduce && (
-              <motion.div className="pointer-events-none absolute inset-x-[-1ch] h-px bg-coal" style={{ top: scan, opacity: scanOpacity }} aria-hidden="true">
-                <span className="absolute -top-[3px] left-0 h-[7px] w-[3ch] bg-coal" />
+              <motion.div className="pointer-events-none absolute inset-x-[-1ch] h-px bg-neel" style={{ top: scan, opacity: scanOpacity }} aria-hidden="true">
+                <span className="absolute -top-[3px] left-0 h-[7px] w-[3ch] bg-neel" />
               </motion.div>
             )}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
