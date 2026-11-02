@@ -2,9 +2,14 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { db, type VoiceTurn } from "../lib/db";
+import { keysOf } from "../lib/fresh";
 import { useSpeaking, useThinking } from "../lib/hub";
 import type { Go, Screen } from "../lib/nav";
+import { SignalGlyph } from "./Glyphs";
+import { FlowingWords } from "./Heard";
 import { NecklaceIcon, SpeakerIcon } from "./Icons";
+
+const NAME = { sleep: "Sleep", pressure: "Pressure", connection: "Connection", energy: "Energy", drive: "Drive" } as const;
 
 /** Three dots that breathe while the hub is thinking. */
 export function Dots() {
@@ -47,7 +52,7 @@ export function LiveToasts({ go, screen }: { go: Go; screen: Screen }) {
     if (last && last.id !== firstId.current && last.source === "necklace") {
       firstId.current = last.id;
       setShown(last);
-      const t = window.setTimeout(() => setShown(null), 12000);
+      const t = window.setTimeout(() => setShown(null), 15000);
       return () => window.clearTimeout(t);
     }
   }, [last]);
@@ -68,19 +73,51 @@ export function LiveToasts({ go, screen }: { go: Go; screen: Screen }) {
           </motion.div>
         )}
         {showTurn && (
-          <motion.button key={`turn-${shown.id}`} layout onClick={() => { setShown(null); go("companion"); }}
+          <motion.div key={`turn-${shown.id}`} layout
             initial={{ opacity: 0, y: -16, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="pointer-events-auto w-full max-w-[480px] rounded-3xl border border-line bg-card p-4 text-left shadow-soft">
-            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-              <span className="flex items-center gap-1.5"><NecklaceIcon size={14} /> From your necklace, just now</span>
-              {speaking && <span className="flex items-center gap-1.5 text-indigo"><SpeakerIcon size={14} /><Wave /></span>}
-            </div>
-            <p className="mt-2 text-sm text-soft">“{shown.heard}”</p>
-            <p className="mt-1.5 font-semibold text-ink">{shown.reply}</p>
-          </motion.button>
+            className="pointer-events-auto w-full max-w-[480px] overflow-hidden rounded-3xl border border-line bg-card shadow-soft">
+            <button onClick={() => { setShown(null); go("companion"); }} className="block w-full p-4 pb-3 text-left">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.12em] text-faint">
+                <span className="flex items-center gap-1.5"><NecklaceIcon size={14} /> From your necklace, just now</span>
+                {speaking && <span className="flex items-center gap-1.5 text-indigo"><SpeakerIcon size={14} /><Wave /></span>}
+              </div>
+              <FlowingWords text={shown.heard} max={40} className="mt-2 block text-sm text-soft" />
+              <motion.p className="mt-1.5 font-semibold text-ink" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 + Math.min(40, shown.heard.split(/\s+/).length) * 0.07, duration: 0.6 }}>
+                {shown.reply}
+              </motion.p>
+            </button>
+            <Touched turn={shown} delay={0.9 + Math.min(40, shown.heard.split(/\s+/).length) * 0.07} onOpen={() => { setShown(null); go("insights"); }} />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/** The signals this turn touched: each one lifts out of the card, then the row settles with "added to your insights". */
+function Touched({ turn, delay, onOpen }: { turn: VoiceTurn; delay: number; onOpen: () => void }) {
+  const keys = keysOf(turn);
+  if (keys.length === 0) return null;
+  return (
+    <motion.button onClick={onOpen} className="flex w-full flex-wrap items-center gap-2 border-t border-line bg-card-2/60 px-4 py-3 text-left"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay, duration: 0.4 }}>
+      {keys.map((k, i) => (
+        <motion.span key={k} className="relative inline-flex items-center gap-1.5 rounded-full border border-indigo/40 px-2.5 py-1 text-[12px] font-semibold text-indigo"
+          initial={{ opacity: 0, y: 14, scale: 0.6 }}
+          animate={{ opacity: 1, y: [14, -6, 0], scale: [0.6, 1.12, 1] }}
+          transition={{ delay: delay + 0.15 + i * 0.16, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+          <motion.span className="absolute inset-0 rounded-full bg-indigo/25" initial={{ scale: 1, opacity: 0.8 }} animate={{ scale: 1.9, opacity: 0 }}
+            transition={{ delay: delay + 0.35 + i * 0.16, duration: 0.9 }} />
+          <SignalGlyph k={k} size={14} className="relative" />
+          <span className="relative">{NAME[k]}</span>
+        </motion.span>
+      ))}
+      <motion.span className="ml-auto flex items-center gap-1 text-[12px] font-medium text-soft"
+        initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: delay + 0.4 + keys.length * 0.16, duration: 0.5 }}>
+        Added to your insights <span aria-hidden="true">→</span>
+      </motion.span>
+    </motion.button>
   );
 }

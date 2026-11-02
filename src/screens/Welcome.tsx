@@ -3,30 +3,50 @@ import { useState } from "react";
 import { ArrowIcon } from "../components/Icons";
 import { Shisha } from "../components/shisha/Shisha";
 import { THREAD } from "../components/shisha/palette";
-import { Button, ease } from "../components/ui";
+import { ease } from "../components/ui";
+import { db } from "../lib/db";
 import { copy } from "../content/copy";
 import { unlockAudio } from "../lib/hub";
 import { setPrefs, usePrefs } from "../lib/prefs";
 import { loadSample } from "../lib/sample";
 
-const POINTS = [
-  ["01", "A 30-second check-in", "Mood, stress, energy, sleep, and who you talked to."],
-  ["02", "Compared with your own normal", "Not with anyone else. Every signal shows its proof."],
-  ["03", "Pointed to the right support", "Calm tools now, real people when it matters."],
+type Door = "preview" | "voice" | "checkin";
+
+// Three calm doors instead of a form: look around, just talk, or check in.
+const DOORS: { id: Door; title: string; line: string; tone: string; glyph: React.ReactNode }[] = [
+  {
+    id: "preview", title: "Preview", tone: "var(--sage)",
+    line: "Look around first. Three weeks of Asha show how MindMirror notices drift.",
+    glyph: <><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z" /><circle cx="12" cy="12" r="2.8" /></>,
+  },
+  {
+    id: "voice", title: "Voice mode", tone: "var(--indigo)",
+    line: "Just talk, to your phone or your necklace. What you say counts in your signals.",
+    glyph: <path d="M4 12h1M7.5 8.5v7M11 5v14M14.5 8v8M18 10.5v3M20.5 12H20" />,
+  },
+  {
+    id: "checkin", title: "Check-in", tone: "var(--sun)",
+    line: "Thirty seconds. Mood, sleep, stress, energy, and who you talked to.",
+    glyph: <path d="M3 12h4l2-5 4 10 2-5h6" />,
+  },
 ];
 
-/** First-run welcome: a slow breathing mirror, three promises, and a way in. */
+/** First-run welcome: a slow breathing mirror and three ways in. */
 export default function Welcome() {
   const p = usePrefs();
   const [name, setName] = useState(p.name);
-  const [busy, setBusy] = useState(false);
+  const [chosen, setChosen] = useState<Door | "fresh" | null>(null);
 
-  async function enter(sample: boolean) {
+  async function enter(d: Door | "fresh") {
+    if (chosen) return;
     unlockAudio();
-    setBusy(true);
-    if (sample) await loadSample();
-    setPrefs({ welcomed: true, name: name.trim() || (sample ? "Asha" : "") });
-    location.hash = "#/home";
+    setChosen(d);
+    navigator.vibrate?.(8);
+    // let the chosen door glow for a breath before the room changes
+    await new Promise((r) => setTimeout(r, 850));
+    if (d === "preview" && (await db.checkins.count()) === 0) await loadSample();
+    setPrefs({ welcomed: true, name: name.trim() || (d === "preview" ? "Asha" : "") });
+    location.hash = d === "preview" || d === "fresh" ? "#/home" : `#/${d}`;
   }
 
   return (
@@ -49,29 +69,52 @@ export default function Welcome() {
         </div>
 
         <div>
-        <div className="mt-10 lg:mt-0">
-          {POINTS.map(([n, title, line], i) => (
-            <motion.div key={title} className="flex items-baseline gap-5 border-t border-dashed border-ink/20 py-4"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 + i * 0.12, duration: 0.6, ease }}>
-              <span className="t-caption-sm text-faint">{n}</span>
-              <div>
-                <p className="text-[15px] font-medium">{title}</p>
-                <p className="text-[14px] text-soft">{line}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div className="mt-8 space-y-3" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 0.6, ease }}>
+        <motion.div className="mt-10 lg:mt-0" initial={{ opacity: 0, y: 12 }} animate={{ opacity: chosen ? 0 : 1, y: 0 }}
+          transition={{ delay: chosen ? 0 : 0.6, duration: 0.6, ease }}>
           <input value={name} onChange={(e) => setName(e.target.value.slice(0, 30))} placeholder="What should we call you? (optional)"
             className="min-h-12 w-full rounded-[4px] border border-ink/20 bg-card px-4 outline-none focus:border-indigo" />
-          <Button onClick={() => void enter(true)} disabled={busy}>
-            Explore with sample data <ArrowIcon size={18} />
-          </Button>
-          <Button variant="soft" onClick={() => void enter(false)} disabled={busy}>Start fresh</Button>
-          <p className="pt-2 text-xs text-faint">
-            Sample data is three weeks of Asha, a student slowly drifting. {copy.disclaimer}
-          </p>
+          <p className="mt-6 t-caption-sm text-faint">Where would you like to begin?</p>
+        </motion.div>
+
+        <div className="mt-3 flex flex-col gap-3">
+          {DOORS.map((d, i) => {
+            const me = chosen === d.id;
+            const other = !!chosen && !me;
+            return (
+              <motion.button key={d.id} onClick={() => void enter(d.id)}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: other ? 0 : 1, y: other ? 10 : me ? -4 : 0, scale: me ? 1.02 : 1 }}
+                transition={{ duration: chosen ? 0.5 : 0.7, delay: chosen ? 0 : 0.75 + i * 0.12, ease }}
+                whileHover={chosen ? undefined : { y: -2 }} whileTap={{ scale: 0.985 }}
+                className="group relative flex items-center gap-4 overflow-hidden rounded-[6px] border border-ink/15 bg-card p-4 text-left transition-colors hover:border-ink/30"
+                style={me ? { borderColor: d.tone } : undefined}>
+                <motion.span className="pointer-events-none absolute inset-0" initial={false}
+                  animate={{ opacity: me ? 1 : 0 }} transition={{ duration: 0.5 }}
+                  style={{ background: `radial-gradient(120% 160% at 8% 50%, color-mix(in oklab, ${d.tone} 26%, transparent), transparent 70%)` }} />
+                <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full"
+                  style={{ background: `color-mix(in oklab, ${d.tone} 18%, transparent)`, color: d.tone }}>
+                  {me && (
+                    <motion.span className="absolute inset-0 rounded-full" style={{ background: d.tone }}
+                      initial={{ scale: 1, opacity: 0.35 }} animate={{ scale: 1.8, opacity: 0 }} transition={{ duration: 1.1, repeat: Infinity }} />
+                  )}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+                    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="relative">{d.glyph}</svg>
+                </span>
+                <span className="relative min-w-0 flex-1">
+                  <span className="block font-display text-[1.6rem] leading-tight">{d.title}</span>
+                  <span className="mt-0.5 block text-[14px] leading-snug text-soft">{me ? "Opening gently…" : d.line}</span>
+                </span>
+                <span className="relative text-faint transition-transform group-hover:translate-x-1"><ArrowIcon size={18} /></span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <motion.div className="mt-6" initial={{ opacity: 0 }} animate={{ opacity: chosen ? 0 : 1 }} transition={{ delay: chosen ? 0 : 1.3, duration: 0.6 }}>
+          <button onClick={() => void enter("fresh")} className="text-[13px] font-medium text-soft underline decoration-line underline-offset-4 hover:text-ink">
+            Or start fresh, with nothing in it yet
+          </button>
+          <p className="pt-2 text-xs text-faint">{copy.disclaimer}</p>
         </motion.div>
         </div>
       </div>

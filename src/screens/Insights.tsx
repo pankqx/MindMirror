@@ -13,6 +13,7 @@ import type { Go } from "../lib/nav";
 import { seriesFor } from "../lib/series";
 import type { SignalKey } from "../lib/signals";
 import { useInsights } from "../lib/useInsights";
+import { useFresh } from "../lib/fresh";
 import UrgentHelp from "./UrgentHelp";
 import { Cloth } from "../components/shisha/Cloth";
 import { weave } from "../components/shisha/cloth";
@@ -31,6 +32,7 @@ export default function Insights({ go }: { go: Go }) {
   const ins = useInsights();
   const checkins = useLiveQuery(() => db.checkins.toArray(), []);
   const [chart, setChart] = useState<SignalKey>("sleep");
+  const fresh = useFresh();
 
   if (!ins || !checkins) return null;
   const today = localDate();
@@ -76,7 +78,8 @@ export default function Insights({ go }: { go: Go }) {
           <motion.div key={s.key} variants={item}>
             <SignalCard name={s.name} icon={<SignalGlyph k={s.key} size={26} />} level={s.level} proof={s.text}
               series={seriesFor(s.key, checkins, today, 21)} baseline={s.key === "connection" ? null : s.baseline}
-              tip={tips[dayIndex % tips.length]} />
+              tip={tips[dayIndex % tips.length]}
+              heard={fresh.turn && fresh.keys.has(s.key) ? { text: fresh.turn.heard, source: fresh.turn.source } : null} />
           </motion.div>
         );
       })}

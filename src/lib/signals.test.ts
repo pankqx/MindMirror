@@ -80,6 +80,26 @@ describe("signal engine", () => {
     expect(ins.signals.find((s) => s.key === "drive")!.level).toBe("needs care");
   });
 
+  it("one necklace turn about sleep lifts sleep to watch, with proof", () => {
+    const turn: VoiceTurn = {
+      at: `${TODAY}T08:00:00.000Z`, heard: "I slept four hours", reply: "", mood: "tired", signals: ["sleep", "pressure"], source: "necklace",
+    };
+    const ins = computeInsights(steady(), [turn], [], TODAY);
+    const sleep = ins.signals.find((s) => s.key === "sleep")!;
+    expect(sleep.level).toBe("watch");
+    expect(sleep.text).toMatch(/You told MindMirror about your sleep once/);
+    expect(ins.signals.find((s) => s.key === "pressure")!.level).toBe("watch");
+    expect(ins.signals.find((s) => s.key === "connection")!.level).toBe("steady");
+  });
+
+  it("voice turns count even while the app is still learning your normal", () => {
+    const turn = (h: number): VoiceTurn => ({
+      at: `${TODAY}T0${h}:00:00.000Z`, heard: "", reply: "", mood: "low", signals: ["isolation"], source: "necklace",
+    });
+    const ins = computeInsights([], [turn(1), turn(2)], [], TODAY);
+    expect(ins.signals.find((s) => s.key === "connection")!.level).toBe("needs care");
+  });
+
   it("planner overload raises pressure", () => {
     const tasks = [{ title: "DBMS record", due: addDays(TODAY, 1), hoursNeeded: 6, hoursPlanned: 2, done: false }];
     const ins = computeInsights(steady(), [], tasks, TODAY);
