@@ -1,8 +1,6 @@
 // The front page (#/landing): an editorial walk through MindMirror, room by room.
 // Khadi and neel rooms alternate and stack; every section lives in components/landing, every word in content/landing.
 
-import "@fontsource-variable/geist";
-import "@fontsource-variable/geist-mono";
 import { useEffect } from "react";
 import type { Go } from "../lib/nav";
 import { db } from "../lib/db";
