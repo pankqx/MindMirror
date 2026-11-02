@@ -61,6 +61,21 @@
   color-scheme: dark;
 }
 
+/* a neel surface inside a khadi page (the side rail, dark cards): local dark threads */
+.on-neel {
+  --ink: #efe8da;
+  --soft: #b4afc4;
+  --faint: #7d7a91;
+  --line: #2a3058;
+  --card: #1a1f40;
+  --card-2: #232951;
+  --bg: #171b38;
+  --indigo: #e46a9a;
+  --indigo-ink: #171b38;
+  --sage: #9dbb6e;
+  color: var(--ink);
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-2: var(--bg-2);
