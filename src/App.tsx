@@ -4,8 +4,9 @@ import { CalendarIcon, ChartIcon, CheckIcon, CloseIcon, FaceIcon, GearIcon, Hear
 import { LiveToasts } from "./components/LiveToasts";
 import { Settings } from "./components/Settings";
 import { HubStatus, ThemeButton, TopBar, Wordmark } from "./components/TopBar";
-import { saveCheckIn } from "./lib/db";
+import { db, saveCheckIn } from "./lib/db";
 import { startSavingTurns, unlockAudio } from "./lib/hub";
+import { loadSample } from "./lib/sample";
 import { IMMERSIVE, TITLES, type Go, type Screen } from "./lib/nav";
 import { applyTheme, usePrefs } from "./lib/prefs";
 import { useInsights } from "./lib/useInsights";
@@ -108,6 +109,17 @@ export default function App() {
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
     };
+  }, []);
+
+  // First visit: start with Asha's synthetic three weeks, so every graph has a story to show.
+  useEffect(() => {
+    void (async () => {
+      try {
+        if (localStorage.getItem("mm-sample-auto")) return;
+        localStorage.setItem("mm-sample-auto", "1");
+      } catch { /* private mode: still load once per session */ }
+      if ((await db.checkins.count()) === 0 && (await db.voice.count()) === 0) await loadSample();
+    })();
   }, []);
 
   // Save every necklace / browser voice turn as it happens (and speak necklace replies here).
