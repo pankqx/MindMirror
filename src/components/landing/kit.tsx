@@ -2,7 +2,7 @@
 
 import Lenis from "lenis";
 import { motion, useReducedMotion } from "framer-motion";
-import { createElement, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -36,24 +36,26 @@ export function scrollToId(id: string) {
   else window.scrollTo({ top: id === "top" ? 0 : el.getBoundingClientRect().top + window.scrollY, behavior: "smooth" });
 }
 
-/** A heading whose lines rise out of their own masks. Split lines with "\n". */
+/**
+ * A heading whose lines rise out of their own masks. Split lines with "\n".
+ * The heading itself watches the viewport: the hidden lines are clipped, so they can't.
+ */
 export function Lines({ text, as = "h2", className = "", delay = 0 }: { text: string; as?: "h1" | "h2" | "h3" | "p"; className?: string; delay?: number }) {
   const reduce = useReducedMotion();
   const lines = text.split("\n");
-  return createElement(
-    as,
-    { className, "aria-label": text.replace(/\n/g, " ") },
-    lines.map((l, i) => (
-      <span key={i} className="block overflow-hidden pb-[0.06em]" aria-hidden="true">
-        <motion.span className="block"
-          initial={reduce ? { opacity: 0 } : { y: "105%" }}
-          whileInView={reduce ? { opacity: 1 } : { y: "0%" }}
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.9, ease, delay: delay + i * 0.08 }}>
-          {l}
-        </motion.span>
-      </span>
-    )),
+  const Tag = motion[as];
+  return (
+    <Tag className={className} aria-label={text.replace(/\n/g, " ")} initial="hidden" whileInView="show"
+      viewport={{ once: true, amount: 0.4 }} variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: delay } } }}>
+      {lines.map((l, i) => (
+        <span key={i} className="block overflow-hidden pb-[0.06em]" aria-hidden="true">
+          <motion.span className="block"
+            variants={reduce ? { hidden: { opacity: 0 }, show: { opacity: 1 } } : { hidden: { y: "105%" }, show: { y: "0%", transition: { duration: 0.9, ease } } }}>
+            {l}
+          </motion.span>
+        </span>
+      ))}
+    </Tag>
   );
 }
 
@@ -78,19 +80,23 @@ const TONES: Record<Tone, string> = {
 };
 
 /**
- * The house button: each word sits in its own block, and on hover every word rolls
- * up to a fresh copy of itself, one after another.
+ * The house button: the first word sits in its own block, the rest in a second, and on
+ * hover each block rolls up to a fresh copy of itself, one after the other.
  */
 export function Btn({ children, onClick, href, tone = "coal", className = "", label }: {
   children: string; onClick?: () => void; href?: string; tone?: Tone; className?: string; label?: string;
 }) {
-  const words = children.split(" ");
+  // at most two blocks: the first word, then the rest ("Get / started", "Try / the sample")
+  const sp = children.indexOf(" ");
+  const words = sp < 0 ? [children] : [children.slice(0, sp), children.slice(sp + 1)];
   const inner = words.map((w, i) => (
-    <span key={i} className={`relative flex h-12 items-center overflow-hidden px-4 ${TONES[tone]} first:rounded-l-[3px] last:rounded-r-[3px]`}>
-      <span className="block transition-transform duration-500 ease-(--ease-lp) group-hover:-translate-y-[150%] motion-reduce:transition-none"
-        style={{ transitionDelay: `${i * 45}ms` }}>{w}</span>
-      <span aria-hidden="true" className="absolute inset-x-4 block translate-y-[150%] transition-transform duration-500 ease-(--ease-lp) group-hover:translate-y-0 motion-reduce:transition-none"
-        style={{ transitionDelay: `${i * 45}ms` }}>{w}</span>
+    <span key={i} className={`flex h-12 items-center px-4 ${TONES[tone]} first:rounded-l-[3px] last:rounded-r-[3px]`}>
+      <span className="relative block overflow-hidden">
+        <span className="block transition-transform duration-500 ease-(--ease-lp) group-hover:-translate-y-full motion-reduce:transition-none"
+          style={{ transitionDelay: `${i * 45}ms` }}>{w}</span>
+        <span aria-hidden="true" className="absolute left-0 top-full block transition-transform duration-500 ease-(--ease-lp) group-hover:-translate-y-full motion-reduce:transition-none"
+          style={{ transitionDelay: `${i * 45}ms` }}>{w}</span>
+      </span>
     </span>
   ));
   const cls = `group t-caption inline-flex w-fit shrink-0 cursor-pointer select-none gap-[2px] whitespace-nowrap active:scale-[0.98] transition-transform ${className}`;

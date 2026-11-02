@@ -61,7 +61,7 @@ export function Nav({ onStart }: { onStart: () => void }) {
             </button>
           </div>
           {/* status ticker */}
-          <div className="relative hidden h-6 items-center overflow-hidden border-t border-white/10 lg:flex" aria-hidden="true">
+          <div className="relative hidden h-6 w-0 min-w-full items-center overflow-hidden border-t border-white/10 lg:flex" aria-hidden="true">
             <span className="absolute left-2 z-10 flex items-center bg-coal pr-2"><Ping /></span>
             <div className="lp-ticker t-caption-sm flex w-max whitespace-nowrap pl-6 text-[10.5px] text-white/45">
               <span>{tick}</span><span>{tick}</span>

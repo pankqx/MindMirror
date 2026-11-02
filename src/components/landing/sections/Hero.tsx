@@ -21,12 +21,12 @@ export function Hero({ onStart }: { onStart: () => void }) {
   return (
     <section id="top" ref={track} className={`relative bg-paper text-coal ${dives ? "h-[200svh]" : ""}`}>
       <div className={`grid grid-cols-1 lg:grid-cols-12 lg:gap-x-4 ${dives ? "sticky top-0 h-svh overflow-hidden" : "lg:h-svh lg:min-h-[640px]"}`}>
-        <motion.div className="flex flex-col px-4 pb-12 pt-28 lg:col-span-5 lg:justify-center lg:px-20 lg:pb-0 lg:pt-0"
+        <motion.div className="flex flex-col px-4 pb-12 pt-28 lg:col-span-6 lg:justify-center lg:pb-0 lg:pl-20 lg:pr-10 lg:pt-0"
           style={dives ? { x, opacity: fade } : undefined}>
           <motion.p className="t-caption mb-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
             {HERO.eyebrow}
           </motion.p>
-          <Lines as="h1" text={HERO.title} className="t-hero mb-8 text-balance" delay={0.35} />
+          <Lines as="h1" text={HERO.title} className="t-hero mb-8" delay={0.35} />
           <motion.p className="t-body-lg max-w-[440px] text-stone" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.9, ease }}>
             {HERO.body}
