@@ -1,7 +1,8 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import NormalRadar from "../components/NormalRadar";
 import { ArrowIcon } from "../components/Icons";
 import SignalCard from "../components/SignalCard";
 import { SignalGlyph } from "../components/Glyphs";
@@ -40,6 +41,10 @@ export default function Insights({ go }: { go: Go }) {
   const cfg = CHARTS.find((c) => c.key === chart)!;
   const sig = ins.signals.find((s) => s.key === chart);
   const data = seriesFor(chart, checkins, today, 21).map((p) => ({ day: p.date.slice(8), value: p.value }));
+  // "your normal" as a soft band around the usual value, and the last 3 days lit up
+  const half = chart === "sleep" ? 0.75 : 0.5;
+  const band = sig?.baseline != null ? [sig.baseline - half, sig.baseline + half] as const : null;
+  const off = (v: number | null) => band != null && v != null && (v < band[0] || v > band[1]);
   const hasData = data.some((d) => d.value != null);
   const flagged = ins.signals.filter((s) => s.level === "watch" || s.level === "needs care").length;
 
@@ -68,6 +73,18 @@ export default function Insights({ go }: { go: Go }) {
         </div>
         <Cloth days={weave(checkins, today, 21)} />
       </motion.div>
+
+      {ins.signals.every((s) => s.recent != null && s.baseline != null) && (
+        <motion.div variants={item}>
+          <Card className="!p-4 lg:!p-6">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="t-caption-sm text-soft">You now vs your normal</p>
+              <p className="t-caption-sm text-faint">further out = better</p>
+            </div>
+            <NormalRadar signals={ins.signals} />
+          </Card>
+        </motion.div>
+      )}
 
       </div>
       <div>
@@ -101,28 +118,54 @@ export default function Insights({ go }: { go: Go }) {
           </div>
           {hasData ? (
             <motion.div key={chart} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={data} margin={{ left: -24, right: 8, top: 8 }}>
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={data} margin={{ left: -24, right: 14, top: 14 }}>
                   <defs>
                     <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--indigo)" stopOpacity={0.28} />
+                      <stop offset="0%" stopColor="var(--indigo)" stopOpacity={0.34} />
                       <stop offset="100%" stopColor="var(--indigo)" stopOpacity={0} />
                     </linearGradient>
+                    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="var(--faint)" />
+                      <stop offset="70%" stopColor="var(--indigo)" />
+                      <stop offset="100%" stopColor="var(--coral)" />
+                    </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="var(--line)" vertical={false} />
+                  <CartesianGrid stroke="var(--line)" vertical={false} strokeDasharray="2 6" />
+                  {band && (
+                    <ReferenceArea y1={band[0]} y2={band[1]} fill="var(--sage)" fillOpacity={0.14} stroke="none" />
+                  )}
+                  {data.length >= 3 && (
+                    <ReferenceArea x1={data[data.length - 3].day} x2={data[data.length - 1].day} fill="var(--sun)" fillOpacity={0.12} stroke="none" />
+                  )}
                   <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--faint)" }} axisLine={false} tickLine={false} interval={3} />
                   <YAxis domain={cfg.domain} tick={{ fontSize: 10, fill: "var(--faint)" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 14, color: "var(--ink)" }}
+                  <Tooltip cursor={{ stroke: "var(--indigo)", strokeWidth: 1, strokeDasharray: "3 3" }}
+                    contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 14, color: "var(--ink)", boxShadow: "0 12px 32px rgba(0,0,0,0.12)" }}
                     formatter={(v) => [`${v} ${cfg.unit}`, cfg.label]} labelFormatter={(l) => `Day ${l}`} />
                   {sig?.baseline != null && (
-                    <ReferenceLine y={sig.baseline} stroke="var(--sage)" strokeDasharray="6 4" strokeWidth={2}
-                      label={{ value: "your usual", fontSize: 10, fill: "var(--soft)", position: "insideTopRight" }} />
+                    <ReferenceLine y={sig.baseline} stroke="var(--sage)" strokeDasharray="6 4" strokeWidth={1.5} />
                   )}
-                  <Area type="monotone" dataKey="value" stroke="var(--indigo)" strokeWidth={2} fill="url(#fill)" connectNulls
-                    dot={false} activeDot={{ r: 5 }} animationDuration={900} />
+                  <Area type="monotone" dataKey="value" stroke="url(#line)" strokeWidth={3} fill="url(#fill)" connectNulls
+                    dot={(p: { cx?: number; cy?: number; index?: number; payload?: { value: number | null } }) => {
+                      const v = p.payload?.value ?? null;
+                      if (p.cx == null || p.cy == null || v == null) return <g key={p.index} />;
+                      const drift = off(v);
+                      return (
+                        <g key={p.index}>
+                          {drift && <circle cx={p.cx} cy={p.cy} r={9} fill="var(--coral)" opacity={0.18} />}
+                          <circle cx={p.cx} cy={p.cy} r={drift ? 4.5 : 2.6} fill={drift ? "var(--coral)" : "var(--card)"} stroke={drift ? "var(--card)" : "var(--indigo)"} strokeWidth={drift ? 1.5 : 1.6} />
+                        </g>
+                      );
+                    }}
+                    activeDot={{ r: 6, fill: "var(--indigo)", stroke: "var(--card)", strokeWidth: 2 }} animationDuration={1400} animationEasing="ease-out" />
                 </AreaChart>
               </ResponsiveContainer>
+              <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-soft">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-4 rounded-sm bg-sage/30" />your normal</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-coral" />outside your normal</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-4 rounded-sm bg-sun/25" />last 3 days</span>
+              </p>
             </motion.div>
           ) : (
             <p className="py-10 text-center text-sm text-soft">Check in for a few days to see your line.</p>
