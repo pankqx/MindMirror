@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
@@ -267,6 +267,7 @@ input[type="range"].mm-range::-moz-range-thumb {
 /*
   Landing page (#/landing): an editorial system of its own.
   Paper and coal rooms that alternate, one sans for voice (Geist 500), one mono for labels (Geist Mono, uppercase).
+  Both fonts are bundled (fontsource), so the landing looks right offline too.
   Fixed colours on purpose: the landing looks the same whatever the app theme is.
   Type sizes are fluid between a 375px and a 1600px screen.
 */
@@ -279,8 +280,8 @@ input[type="range"].mm-range::-moz-range-thumb {
   --color-mist: #dedede;
   --color-glow: #a9b0ff;
   --color-glow-ink: #3b45b8;
-  --font-geist: "Geist", "Inter", system-ui, sans-serif;
-  --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-geist: "Geist Variable", "Inter", system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
   --ease-lp: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -302,8 +303,8 @@ input[type="range"].mm-range::-moz-range-thumb {
 }
 
 @utility t-hero {
-  font-size: clamp(2.5rem, calc(2.5rem + 16 * var(--fluid)), 3.5rem);
-  line-height: 1;
+  font-size: clamp(2.375rem, calc(2.375rem + 10 * var(--fluid)), 3rem);
+  line-height: 1.02;
   font-weight: 500;
   letter-spacing: -0.02em;
 }

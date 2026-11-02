@@ -34,7 +34,7 @@ export function Vortex({ text, dive, className = "" }: { text: string; dive?: Mo
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       const size = Math.max(11, Math.min(14, w / 70));
-      ctx.font = `400 ${size}px "Geist Mono", ui-monospace, monospace`;
+      ctx.font = `400 ${size}px "Geist Mono Variable", ui-monospace, monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const cw = size * 0.62; // mono advance
@@ -101,7 +101,7 @@ export function Vortex({ text, dive, className = "" }: { text: string; dive?: Mo
     canvas.addEventListener("pointerleave", onLeave);
     canvas.addEventListener("click", onClick);
     // wait for the mono font so the first frame isn't in a fallback face
-    void document.fonts?.load(`400 13px "Geist Mono"`).finally(() => {
+    void document.fonts?.load(`400 13px "Geist Mono Variable"`).finally(() => {
       if (dead) return;
       if (reduce) draw(0);
       else raf = requestAnimationFrame(loop);

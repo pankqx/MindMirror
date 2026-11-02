@@ -24,7 +24,7 @@ function CheckIns({ r }: { r: boolean }) {
         const y = 48 + i * 26;
         return (
           <g key={l}>
-            <text x="30" y={y - 7} fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">{l}</text>
+            <text x="30" y={y - 7} fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">{l}</text>
             <line x1="30" x2="170" y1={y} y2={y} stroke={F} />
             <motion.circle cy={y} r="4.5" fill="#232323" stroke={i === 1 ? G : S}
               initial={{ cx: 30 + v * 140 }} animate={r ? {} : { cx: [30 + v * 140, 30 + Math.max(0.1, v - 0.25) * 140] }}
@@ -51,8 +51,8 @@ function Insights({ r }: { r: boolean }) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: r ? 0 : i * 0.12, duration: 0.4 }} />
         );
       })}
-      <text x="28" y="62" fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">YOUR USUAL</text>
-      <text x="124" y="150" fontFamily="Geist Mono, monospace" fontSize="7" fill={G} stroke="none">NEEDS CARE</text>
+      <text x="28" y="62" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">YOUR USUAL</text>
+      <text x="124" y="150" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={G} stroke="none">NEEDS CARE</text>
     </Frame>
   );
 }
@@ -83,7 +83,7 @@ function Breathing({ r }: { r: boolean }) {
         animate={r ? { r: 45 } : { r: [30, 62, 62, 30] }} transition={{ repeat: Infinity, duration: 10, times: [0, 0.4, 0.42, 1], ease: "easeInOut" }} />
       <motion.circle cx="100" cy="100" fill="rgba(169,176,255,0.12)" stroke="none" initial={{ r: 26 }}
         animate={r ? { r: 40 } : { r: [26, 56, 56, 26] }} transition={{ repeat: Infinity, duration: 10, times: [0, 0.4, 0.42, 1], ease: "easeInOut" }} />
-      <text x="100" y="186" textAnchor="middle" fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">IN 4 · OUT 6</text>
+      <text x="100" y="186" textAnchor="middle" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">IN 4 · OUT 6</text>
     </Frame>
   );
 }
@@ -117,7 +117,7 @@ function Planner({ r }: { r: boolean }) {
             initial={{ opacity: on ? 0 : 1 }} animate={{ opacity: 1 }} transition={{ delay: r ? 0 : 0.2 + filled.indexOf(i) * 0.15 }} />
         );
       })}
-      <text x="30" y="40" fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">HOURS PLANNED ≥ HOURS NEEDED</text>
+      <text x="30" y="40" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">HOURS PLANNED ≥ HOURS NEEDED</text>
     </Frame>
   );
 }
@@ -134,7 +134,7 @@ function Ladder({ r }: { r: boolean }) {
           <g key={l}>
             <motion.line x1="50" x2="80" y1={y} y2={y} initial={{ stroke: S }}
               animate={r ? {} : { stroke: [S, G, S] }} transition={{ repeat: Infinity, duration: 4, delay: i, times: [0, 0.15, 0.3] }} />
-            <text x="90" y={y + 2.5} fontFamily="Geist Mono, monospace" fontSize="6.5" fill={F} stroke="none">{`${i + 1} ${l}`}</text>
+            <text x="90" y={y + 2.5} fontFamily="Geist Mono Variable, monospace" fontSize="6.5" fill={F} stroke="none">{`${i + 1} ${l}`}</text>
           </g>
         );
       })}
@@ -152,7 +152,7 @@ function Necklace({ r }: { r: boolean }) {
         <motion.path key={i} d={`M ${124 + i * 9} ${132 - i * 4} q 8 14 0 28`} stroke={G}
           animate={r ? {} : { opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.8, delay: i * 0.25 }} />
       ))}
-      <text x="100" y="186" textAnchor="middle" fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">HOLD · TALK · LET GO</text>
+      <text x="100" y="186" textAnchor="middle" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">HOLD · TALK · LET GO</text>
     </Frame>
   );
 }
@@ -165,7 +165,7 @@ function Privacy({ r }: { r: boolean }) {
       <ellipse cx="100" cy="76" rx="22" ry="6" stroke={G} />
       <path d="M78 76 v 30 a 22 6 0 0 0 44 0 v -30" stroke={G} />
       <motion.path d="M78 91 a 22 6 0 0 0 44 0" stroke={G} animate={r ? {} : { opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} />
-      <text x="100" y="170" textAnchor="middle" fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">INDEXEDDB · THIS DEVICE</text>
+      <text x="100" y="170" textAnchor="middle" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">INDEXEDDB · THIS DEVICE</text>
     </Frame>
   );
 }
@@ -180,8 +180,8 @@ function Patterns({ r }: { r: boolean }) {
         transition={r ? { duration: 0 } : { duration: 2.4, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.2 }} />
       <line x1="24" x2="24" y1="40" y2="170" stroke={F} />
       <line x1="138" x2="138" y1="40" y2="170" stroke={F} strokeDasharray="1 3" />
-      <text x="30" y="80" fontFamily="Geist Mono, monospace" fontSize="7" fill={F} stroke="none">YOUR NORMAL</text>
-      <text x="142" y="50" fontFamily="Geist Mono, monospace" fontSize="7" fill={G} stroke="none">DRIFT</text>
+      <text x="30" y="80" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={F} stroke="none">YOUR NORMAL</text>
+      <text x="142" y="50" fontFamily="Geist Mono Variable, monospace" fontSize="7" fill={G} stroke="none">DRIFT</text>
     </Frame>
   );
 }
