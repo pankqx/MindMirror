@@ -1,10 +1,11 @@
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useConversation } from "../lib/converse";
 import type { Go } from "../lib/nav";
 import { usePrefs } from "../lib/prefs";
 import UrgentHelp from "../screens/UrgentHelp";
 import { BackPill, Cursor } from "./bits";
+import { useMedia } from "../components/landing/motion";
 import { Spoken } from "./VoiceMode";
 import { InkCharacter } from "../character/InkCharacter";
 import { characters, type CharState, type Expression } from "../character/characters";
@@ -38,38 +39,6 @@ const STATE: Record<string, CharState> = { idle: "IDLE", listening: "LISTENING",
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-// Floating moments around the room: soft, photo-like light, each with a small line.
-const MOMENTS = [
-  { x: -44, y: -20, z: -260, w: 190, h: 120, a: "#f0a27a", b: "#3a2a5a", line: "Sea breeze after class" },
-  { x: -30, y: 14, z: -120, w: 150, h: 100, a: "#7aa7f0", b: "#1c2340", line: "Exam week" },
-  { x: -46, y: 28, z: -380, w: 170, h: 110, a: "#e8d07a", b: "#3d2b16", line: "Chai with Amma" },
-  { x: 34, y: -24, z: -200, w: 200, h: 130, a: "#9fd8c8", b: "#173a37", line: "Morning walk" },
-  { x: 44, y: 10, z: -90, w: 160, h: 104, a: "#c99af0", b: "#2a1c40", line: "Late night lab" },
-  { x: 28, y: 30, z: -330, w: 180, h: 116, a: "#f0b7c9", b: "#40202c", line: "Friends, Saturday" },
-  { x: -12, y: -34, z: -480, w: 140, h: 90, a: "#a9b0ff", b: "#1a1d3a", line: "First day" },
-  { x: 16, y: -36, z: -520, w: 150, h: 96, a: "#ffd2a8", b: "#3a2412", line: "Home" },
-];
-
-function Moment({ m, i, mx, my }: { m: (typeof MOMENTS)[number]; i: number; mx: MotionValue<number>; my: MotionValue<number> }) {
-  const depth = 1 - m.z / -600;
-  const x = useTransform(mx, (v) => v * -40 * depth);
-  const y = useTransform(my, (v) => v * -24 * depth);
-  return (
-    <motion.div className="absolute left-1/2 top-1/2" style={{ x, y, marginLeft: `${m.x}vw`, marginTop: `${m.y}vh` }}>
-      <motion.div
-        className="overflow-hidden rounded-xl border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
-        style={{ width: m.w * (0.6 + depth * 0.5), height: m.h * (0.6 + depth * 0.5), translateZ: m.z, filter: `blur(${(1 - depth) * 2.4}px)`, opacity: 0.35 + depth * 0.5 }}
-        initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.35 + depth * 0.5, scale: 1, y: [0, -10, 0] }}
-        transition={{ opacity: { delay: 0.4 + i * 0.12, duration: 1.2 }, scale: { delay: 0.4 + i * 0.12, duration: 1.2, ease }, y: { duration: 6 + i, repeat: Infinity, ease: "easeInOut" } }}>
-        <div className="relative h-full w-full" style={{ background: `radial-gradient(80% 90% at 30% 30%, ${m.a}, ${m.b})` }}>
-          <div className="absolute inset-0" style={{ background: `radial-gradient(40% 50% at ${60 + (i % 3) * 10}% 60%, rgba(255,255,255,0.35), transparent 70%)` }} />
-          <span className="absolute bottom-2 left-3 text-[10px] font-medium tracking-wide text-white/80">{m.line}</span>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 /** Face to face with Reenu or Roman: an AI companion who listens like a therapist, remembers, and talks back. */
 export default function FaceMode({ go }: { go: Go }) {
   const [who, setWhoState] = useState<Who>(readWho);
@@ -94,17 +63,8 @@ export default function FaceMode({ go }: { go: Go }) {
   const inkState: CharState = greeting && c.phase === "idle" ? "GREETING" : STATE[c.phase];
   const expr: Expression = c.crisis ? "concerned" : c.phase === "idle" && c.reply ? "happy" : "neutral";
   const displayName = persona.name;
-  const mx = useMotionValue(0), my = useMotionValue(0);
-  const smx = useSpring(mx, { stiffness: 60, damping: 20 }), smy = useSpring(my, { stiffness: 60, damping: 20 });
+  const lg = useMedia("(min-width: 1024px)");
 
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      mx.set((e.clientX / window.innerWidth) * 2 - 1);
-      my.set((e.clientY / window.innerHeight) * 2 - 1);
-    };
-    window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
-  }, [mx, my]);
 
   // Space bar: hold to talk
   useEffect(() => {
@@ -144,23 +104,24 @@ export default function FaceMode({ go }: { go: Go }) {
         }} />
         <div className="absolute inset-x-0 bottom-[18%] h-[30%]" style={{ background: "radial-gradient(40% 60% at 50% 100%, rgba(255,190,120,0.16), transparent 70%)" }} />
       </div>
-      <div className="pointer-events-none absolute inset-0 hidden md:block" style={{ perspective: 900 }} aria-hidden="true">
-        {MOMENTS.map((m, i) => <Moment key={i} m={m} i={i} mx={smx} my={smy} />)}
-      </div>
 
-      {/* Reenu or Roman, standing in a pool of warm light */}
+      {/* Reenu or Roman, big like in pank-os: the figure fills the room from the floor up,
+          their name huge and faint behind them. Phone: centred; laptop: the left side. */}
       <AnimatePresence mode="wait">
-        {(
-          <motion.div key={persona.id} className="pointer-events-none absolute inset-x-0 bottom-[118px] flex justify-center lg:bottom-[128px]"
-            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: 20, filter: "blur(10px)" }} transition={{ duration: 0.8, ease }}>
-            <div className="absolute -bottom-[10%] h-[64vh] w-[64vh] max-w-[110vw] rounded-full"
-              style={{ background: `radial-gradient(closest-side, ${persona.accent}55, rgba(255,214,170,0.28) 45%, transparent 75%)` }} />
-            <InkCharacter config={persona} state={inkState} expression={expr} level={c.phase === "speaking" ? c.level : undefined}
-              height="min(56vh, 112vw)" className="relative" label={`${persona.name}, your companion (illustration)`} />
-          </motion.div>
-        )}
+        <motion.div key={persona.id} className="pointer-events-none absolute inset-x-0 bottom-[44px] top-[68px] flex items-end justify-center lg:bottom-0 lg:right-auto lg:top-0 lg:w-[58%]"
+          initial={{ opacity: 0, y: 60, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: 30, filter: "blur(12px)" }} transition={{ duration: 0.9, ease }}>
+          <span aria-hidden="true" className="absolute inset-x-0 top-[6%] select-none text-center font-display leading-none text-white/[0.06] lg:top-[12%]"
+            style={{ fontSize: "clamp(7rem, 30vw, 22rem)" }}>{persona.name}</span>
+          <div className="absolute bottom-[-12%] h-[90vh] w-[90vh] max-w-[140vw] rounded-full"
+            style={{ background: `radial-gradient(closest-side, ${persona.accent}5e, rgba(255,214,170,0.26) 45%, transparent 75%)` }} />
+          <InkCharacter config={persona} state={inkState} expression={expr} level={c.phase === "speaking" ? c.level : undefined}
+            height={lg ? "96vh" : "calc(100svh - 112px)"} className="relative shrink-0" label={`${persona.name}, your companion (illustration)`} />
+        </motion.div>
       </AnimatePresence>
+      {/* the bottom fades to the floor so the reply and buttons stay readable over the figure */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[46vh] lg:hidden" aria-hidden="true"
+        style={{ background: "linear-gradient(to bottom, transparent, rgba(7,6,10,0.82) 45%, rgba(7,6,10,0.96))" }} />
 
       <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-5 lg:p-8">
         <BackPill onClick={() => go("landing")} />
@@ -178,18 +139,18 @@ export default function FaceMode({ go }: { go: Go }) {
         </button>
       </header>
 
-      <motion.div className="pointer-events-none absolute inset-x-0 top-[124px] z-10 px-6 text-center lg:top-[96px]"
+      <motion.div className="pointer-events-none absolute inset-x-0 top-[124px] z-10 px-6 text-center lg:inset-x-auto lg:right-[6vw] lg:top-[18vh] lg:w-[460px] lg:px-0 lg:text-left"
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 1, ease }}>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">AI companion and AI therapist · listens, remembers this talk</p>
-        <h1 className="font-display text-[2.4rem] leading-none lg:text-[3.2rem]">{name ? `Hi ${name}, I'm ${displayName}.` : `Hi, I'm ${displayName}.`}</h1>
-        <p className="mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-soft lg:text-[14px]">
+        <p className="mb-3 hidden text-[11px] font-semibold uppercase tracking-[0.2em] text-faint lg:block">AI companion and AI therapist · listens, remembers this talk</p>
+        <h1 className="font-display text-[2rem] leading-none [text-shadow:0_2px_24px_rgba(0,0,0,0.8)] lg:text-[3.6rem]">{name ? `Hi ${name}, I'm ${displayName}.` : `Hi, I'm ${displayName}.`}</h1>
+        <p className="mx-auto mt-3 hidden max-w-sm text-[13px] leading-relaxed text-soft lg:mx-0 lg:block lg:text-[15px]">
           {`${persona.tagline[0].toUpperCase()}${persona.tagline.slice(1)}.`} Tell me anything; together we'll find one small next step. It never diagnoses.
         </p>
       </motion.div>
 
       {c.crisis && <div className="absolute inset-x-4 top-24 z-20 mx-auto max-w-lg"><UrgentHelp /></div>}
 
-      <div className="absolute inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-5 lg:bottom-8">
+      <div className="absolute inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-5 lg:inset-x-auto lg:bottom-[10vh] lg:right-[6vw] lg:w-[460px] lg:px-0">
         {/* heard + reply, right above the controls */}
         <div className="pointer-events-auto w-full text-center">
         <AnimatePresence mode="wait">
