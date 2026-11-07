@@ -2,7 +2,7 @@
 
 A calm web app plus a talking AI necklace that helps college students **notice early signs of stress**, compared with **their own normal**, understand their patterns and find support, **without diagnosing**.
 
-Team **HTTP Dino** (K S Pankaj, Merel Riha Dsouza, A B Kishore Krishna), St Aloysius. CODE MEET 2026 Round 2, Problem 2: Mind Check.
+Built by **K S Pankaj, Merel Riha D'souza and Kishore Krishna** (team HTTP Dino), St Aloysius. CODE MEET 2026 Round 2, Problem 2: Mind Check.
 
 > **Disclosure.** Built during CODE MEET 2026 Round 2. Uses open-source libraries (listed in package.json), Groq and Microsoft Edge TTS APIs, and AI coding assistants (Claude, ChatGPT). Hardware reference code was prepared from our own design before the event.
 

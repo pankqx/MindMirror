@@ -1,5 +1,5 @@
 // The companion stage: Reenu or Roman, drawn almost as tall as the screen, talking with you.
-// Same conversation as Face to face: the laptop hub's AI when it runs, kind offline replies when it doesn't.
+// Same conversation as Face to face: the laptop hub's AI when it runs, an AI straight from the browser when it doesn't.
 // They follow your pointer, listen while you speak, think, answer, and react when poked.
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -127,7 +127,7 @@ export function Stage({ who, onSwitch, onApp }: { who: CharacterId; onSwitch: ()
           {onApp && <button onClick={onApp} className="rounded-[3px] border border-white/20 px-2 py-1 transition-colors hover:border-white hover:text-white">Open the app ↗</button>}
         </div>
         <h2 className="font-display text-[clamp(4.5rem,10vw,10.5rem)] italic leading-[0.82] text-[var(--accent)]">{cfg.name}</h2>
-        <p className="t-caption-sm -mt-1 text-white/50">{cfg.tagline} · {online ? "live AI through your laptop hub" : "kind offline replies (hub not running)"}</p>
+        <p className="t-caption-sm -mt-1 text-white/50">{cfg.tagline} · {online ? "live AI through your laptop hub" : "live AI from this browser"}</p>
 
         <div className="relative max-w-[34rem] rounded-[6px] border border-white/12 bg-neel-deep/70 p-5 backdrop-blur-[2px]" aria-live="polite">
           {c.heard && !local && c.phase !== "idle" && <p className="t-caption-sm mb-2 text-white/45">“{c.heard}”</p>}

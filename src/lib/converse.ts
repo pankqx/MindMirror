@@ -1,6 +1,6 @@
 // One spoken conversation, shared by Voice mode and Face to face.
 // Hub on: the mic goes to the hub (same AI as the necklace) and its voice plays here.
-// Hub off: the browser listens (where it can) and answers with kind offline replies.
+// Hub off: the browser listens (where it can) and asks an AI itself (src/lib/brain.ts), offline replies as the last resort.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chat, hubHealth, onHubEvent, outputLevel, pauseSpeaking, replayLast, resumeSpeaking, speakReply, speakWithBrowser, startTalk, stopSpeaking, unlockAudio, usePaused, useSpeaking, type Talk } from "./hub";
@@ -11,8 +11,9 @@ import { offlineReply } from "./offline";
 import { isCrisis } from "./support";
 import { contextFor } from "./signals";
 import { useInsights } from "./useInsights";
+import { joinResults } from "./transcript";
 
-export type Phase = "idle" | "listening" | "thinking" | "speaking";
+export type Phase ="idle" | "listening" | "thinking" | "speaking";
 
 type Recognition = {
   lang: string; interimResults: boolean; continuous: boolean;
@@ -112,7 +113,7 @@ export function useConversation(opts: { voice?: boolean; mode?: "companion" | "t
     r.continuous = true;
     let text = "";
     r.onresult = (e) => {
-      text = Array.from(e.results).map((x) => x[0].transcript).join(" ");
+      text = joinResults(Array.from(e.results).map((x) => x[0].transcript));
       setHeard(text);
     };
     r.onend = () => {
