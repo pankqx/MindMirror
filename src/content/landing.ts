@@ -75,7 +75,7 @@ export const EXPERIENCE = {
   features: [
     { n: "001", title: "Emotional check-ins", body: "Thirty seconds, five answers: mood, stress, energy, last night's sleep and whether you talked to someone you like. One a day; a second one replaces the first." },
     { n: "002", title: "Personal insights", body: "Five signals (sleep, pressure, connection, energy and drive), each marked steady, watch or needs care. Every one shows the numbers behind it." },
-    { n: "003", title: "AI companion", body: "Type, hold the mic, or hold Space. It listens, reflects, and suggests one small step. With no hub or no internet it still answers, with kind offline replies." },
+    { n: "003", title: "AI companion", body: "Type, hold the mic, or hold Space. It listens, reflects, and suggests one small step. It talks about anything, like ChatGPT, and remembers the conversation. With no internet it still answers kindly." },
     { n: "004", title: "Guided breathing", body: "One minute. Four seconds in, six seconds out, with an orb to follow and a ring that fills as the minute passes." },
     { n: "005", title: "Personal journal", body: "Every check-in has room for a line about your day. The note stays with that day, so a bad night keeps its reason next to it." },
     { n: "006", title: "Daily planner", body: "List what's due and how many hours it needs. The planner tells you if the hours you've planned cover it, because unplanned deadlines are where pressure grows." },
@@ -173,14 +173,14 @@ export const SHOWCASE = {
 
 export const PRIVACY = {
   title: "Private by default.\nHonest about the rest.",
-  credit: "Built by team HTTP Dino, CODE MEET 2026",
+  credit: "Built by K S Pankaj, Merel Riha D'souza and Kishore Krishna",
   ticketLabel: "Accounts needed",
   ticketBig: "0",
   ticketLines: ["Your check-ins, notes and tasks are stored", "in IndexedDB, inside this browser."],
   points: [
     ["01", "Local-first", "Entries live on this device, not on a server"],
     ["02", "Code calculates", "Signals come from unit-tested maths, not a model"],
-    ["03", "AI only when you talk", "Then your words go to the hub, and on to Groq for the reply"],
+    ["03", "AI only when you talk", "Then your words go to an AI (the hub, Groq or a free model) for the reply"],
     ["04", "Crisis words skip the AI", "They go straight to people: 14416, or 112"],
     ["05", "Delete everything", "One button in Settings clears it all"],
   ],
@@ -192,11 +192,11 @@ export const FAQ = {
   items: [
     ["Is MindMirror a diagnosis?", "No. It's a wellness companion, not a medical device. It notices change against your own normal and points you to calm tools or real people. It never labels you."],
     ["Do I need the necklace?", "No. Check-ins, insights, typed chat, breathing, the planner and the play room all work in the browser on their own. The necklace is a prototype that adds hold-to-talk through the laptop hub."],
-    ["Where does my data go?", "Your check-ins, notes, tasks and conversations are stored in your browser's IndexedDB on this device. When you talk to the companion while the hub is running, your words go to the hub on your laptop and on to Groq to write the reply. The API key never touches the browser."],
+    ["Where does my data go?", "Your check-ins, notes, tasks and conversations are stored in your browser's IndexedDB on this device. When you talk to the companion, your words go to an AI to write the reply: through the hub on your laptop when it runs, otherwise straight from the browser to your own Groq or OpenRouter key (set in Settings) or a free public model."],
     ["Why does it wait five days?", "Because \"your normal\" has to be yours. With fewer than five days of check-ins, a signal says \"learning\" instead of guessing."],
     ["Can I try it without my own data?", "Yes. Explore with the sample: three weeks of Asha, a student slowly drifting. Her last three nights are short, so you can see sleep turn to \"needs care\" and the weather turn to soft rain."],
     ["What if I'm not okay right now?", "Please talk to a person. Tele-MANAS is free and open 24x7 on 14416. If you're in danger right now, call 112. If you type crisis words to the companion, it skips the AI and shows you these numbers."],
-    ["Who made it?", "Team HTTP Dino: K S Pankaj, Merel Riha Dsouza and A B Kishore Krishna, St Aloysius, for CODE MEET 2026 (Problem 2: Mind Check). It uses open-source libraries, Groq and Microsoft Edge TTS."],
+    ["Who made it?", "Built by K S Pankaj, Merel Riha D'souza and Kishore Krishna (team HTTP Dino), St Aloysius, for CODE MEET 2026 (Problem 2: Mind Check). It uses open-source libraries, Groq and Microsoft Edge TTS."],
   ] as [string, string][],
 };
 
@@ -220,6 +220,6 @@ export const FOOTER = {
     { title: "Help", links: [["Support", "support"], ["Tele-MANAS 14416", "tel:14416"], ["Emergency 112", "tel:112"]] },
   ] as { title: string; links: [string, string][] }[],
   repo: "https://github.com/pankqx/MindMirror",
-  copyright: "MindMirror, team HTTP Dino",
+  copyright: "MindMirror. Built by K S Pankaj, Merel Riha D'souza and Kishore Krishna",
   note: "Not a medical device. It never diagnoses.",
 };

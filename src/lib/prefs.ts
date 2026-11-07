@@ -12,10 +12,12 @@ export interface Prefs {
   voiceReplies: boolean;
   counsellor: string;
   welcomed: boolean;
+  /** Optional Groq (gsk_…) or OpenRouter (sk-or-…) key, so the app can talk without the hub. Stays on this device. */
+  aiKey: string;
 }
 
 const KEY = "mindmirror.prefs";
-const DEFAULTS: Prefs = { theme: "system", name: "", voiceReplies: true, counsellor: "", welcomed: false };
+const DEFAULTS: Prefs = { theme: "system", name: "", voiceReplies: true, counsellor: "", welcomed: false, aiKey: "" };
 
 function read(): Prefs {
   try {

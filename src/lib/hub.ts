@@ -3,6 +3,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { db, type Mood, type VoiceTurn } from "./db";
 import { getPrefs } from "./prefs";
+import { think } from "./brain";
+import { isCrisis } from "./support";
 
 /**
  * The hub runs on the laptop, port 8787. Use the same machine that served this page,
@@ -94,6 +96,21 @@ export function useHubOnline(): boolean | null {
 export interface TalkOpts { mode?: "companion" | "therapist"; persona?: "reenu" | "roman"; session?: string; context?: string }
 
 export async function chat(text: string, context = "", opts: TalkOpts = {}): Promise<Reply> {
+  try {
+    return await hubChat(text, context, opts);
+  } catch {
+    // No hub (GitHub Pages, a phone): the browser asks an AI itself, with this conversation's memory.
+    if (isCrisis(text)) return { reply: CRISIS_REPLY, mood: "low", signals: [], crisis: true };
+    const reply = await think(text, { ...opts, context });
+    return { reply, mood: "okay", signals: [] };
+  }
+}
+
+const CRISIS_REPLY =
+  "I'm really glad you told me. You deserve support right now. Please call Tele MANAS on 1 4 4 1 6, " +
+  "it's free and open all day and night, or 1 1 2 if you are in danger. Can you also tell someone near you?";
+
+async function hubChat(text: string, context = "", opts: TalkOpts = {}): Promise<Reply> {
   const r = await fetch(`${HUB}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

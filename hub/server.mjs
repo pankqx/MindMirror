@@ -45,12 +45,19 @@ const CRISIS_REPLY =
 
 const isCrisis = (t) => CRISIS.some((w) => t.toLowerCase().includes(w));
 
-const SYSTEM = `You are MindMirror, a warm, calm well-being companion for college students in India.
-You help a student notice early signs of stress and burnout. You never diagnose, never name a disorder,
-never give medical advice. Reply in at most 2 short spoken sentences (under 40 words), plain words,
-no lists, no emojis. Reflect what you heard, then offer one small, doable next step.
-Return ONLY JSON: {"reply": string, "mood": "good"|"okay"|"low"|"stressed"|"tired",
-"signals": array of zero or more of "sleep","pressure","isolation","energy","motivation"}.`;
+// Talks like ChatGPT in voice mode: any topic, real answers, memory of the conversation.
+const GENERAL = `You understand whatever the person says and answer it properly, like ChatGPT in voice mode.
+Talk about anything and everything: questions, facts, studies, coding, science, films, cricket, jokes, stories, advice, plans or just chatting.
+Never just repeat their words back. Answer the actual question or continue the conversation with something new and useful.
+Remember everything said earlier in this conversation and build on it.
+If they share how they feel, listen like a good counsellor: name the feeling gently, validate it, and offer one small helpful idea or one open question.
+You are an AI, not a doctor or licensed therapist: never diagnose or name a disorder, never give medical advice. If they seem unsafe, point to Tele MANAS 14416.
+The reply is spoken aloud: natural spoken sentences, no markdown, no lists, no emojis. About 2 to 4 sentences unless they ask for more detail or a story.`;
+const JSON_RULE = `Return ONLY JSON: {"reply": string, "mood": "good"|"okay"|"low"|"stressed"|"tired",
+"signals": array of zero or more of "sleep","pressure","isolation","energy","motivation" (only ones the person actually mentioned)}.`;
+const SYSTEM = `You are MindMirror, a warm, friendly voice assistant for college students in India.
+${GENERAL}
+${JSON_RULE}`;
 
 // ---------- AI calls ----------
 
@@ -77,16 +84,10 @@ const PERSONAS = {
   roman: "You are Roman: calm, steady, with a little dry, kind humour. You talk like a trusted friend who also listens like a therapist, and you keep it short.",
 };
 const therapistPrompt = (persona) => `${PERSONAS[persona] || PERSONAS.reenu}
-You are an AI companion and AI therapist-style listener inside MindMirror, for college students in India.
-Work like a good counsellor: reflect back what you heard in their own words, name the feeling gently,
-validate it, then ask ONE open question, or offer one small grounding or reframing idea (CBT-style) when it helps.
-Remember what the student said earlier in this conversation and refer back to it naturally.
-If the app's signals are given, you may mention one gently ("you've been sleeping less this week").
-You are an AI, not a licensed therapist or doctor: never diagnose, never name a disorder, never give medical advice.
-Reply in 1 to 3 short spoken sentences (under 55 words), plain warm words, no lists, no emojis.
-If they seem unsafe, gently point to Tele MANAS 14416.
-Return ONLY JSON: {"reply": string, "mood": "good"|"okay"|"low"|"stressed"|"tired",
-"signals": array of zero or more of "sleep","pressure","isolation","energy","motivation"}.`;
+You are an AI companion inside MindMirror, for college students in India.
+${GENERAL}
+If the app's signals are given, you may mention one gently when it fits ("you've been sleeping less this week").
+${JSON_RULE}`;
 
 // Short memory per conversation (face to face, voice mode), so Reenu and Roman remember what you said.
 const sessions = new Map();
@@ -102,7 +103,7 @@ async function llm(endpoint, key, model, messages, extra = {}) {
   const r = await fetch(endpoint, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...extra },
-    body: JSON.stringify({ model, temperature: 0.6, max_tokens: 400, messages }),
+    body: JSON.stringify({ model, temperature: 0.7, max_tokens: 600, messages }),
     signal: AbortSignal.timeout(20000),
   });
   if (!r.ok) throw new Error(`${model} ${r.status}: ${(await r.text()).slice(0, 200)}`);
@@ -144,12 +145,12 @@ export function parseReply(content) {
   try {
     const j = JSON.parse(m ? m[0] : content);
     return {
-      reply: String(j.reply || "").slice(0, 400) || "I'm here with you. Tell me a little more?",
+      reply: String(j.reply || "").slice(0, 1200) || "I'm here with you. Tell me a little more?",
       mood: ["good", "okay", "low", "stressed", "tired"].includes(j.mood) ? j.mood : "okay",
       signals: Array.isArray(j.signals) ? j.signals.filter((s) => typeof s === "string") : [],
     };
   } catch {
-    return { reply: content.trim().slice(0, 400) || "I'm here with you.", mood: "okay", signals: [] };
+    return { reply: content.trim().slice(0, 1200) || "I'm here with you.", mood: "okay", signals: [] };
   }
 }
 
@@ -311,7 +312,7 @@ export const server = http.createServer(async (req, res) => {
       return mp3 ? send(res, 200, mp3, "audio/mpeg") : send(res, 404, { error: "gone" });
     }
     if (req.method === "GET" && url.pathname === "/speak") {
-      const text = String(url.searchParams.get("text") || "").slice(0, 400);
+      const text = String(url.searchParams.get("text") || "").slice(0, 1200);
       if (!text) return send(res, 400, { error: "no text" });
       return send(res, 200, await speakMp3(text), "audio/mpeg");
     }

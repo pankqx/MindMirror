@@ -57,7 +57,7 @@ export default function Companion() {
       setTyped((m) => [...m, { from: "mindmirror", text: r.reply, at: new Date().toISOString() }]);
     } catch {
       await new Promise((r) => setTimeout(r, 700));
-      setTyped((m) => [...m, { from: "mindmirror", text: offlineReply(t), note: "offline reply (hub not running)", at: new Date().toISOString() }]);
+      setTyped((m) => [...m, { from: "mindmirror", text: offlineReply(t), note: "offline reply (AI not reachable)", at: new Date().toISOString() }]);
     } finally {
       setBusy(false);
     }
@@ -139,7 +139,7 @@ export default function Companion() {
               {thinking === "necklace" ? (
                 <span className="inline-flex items-center gap-1.5 text-indigo"><NecklaceIcon size={14} /> Your necklace is talking to me…</span>
               ) : online ? "I listen, reflect, and suggest one small step. Type, hold the mic (or Space), or use your necklace."
-                : online === false ? "The hub is off, so I'll answer with simple offline replies." : "Connecting…"}
+                : online === false ? "Ask me anything. I'll answer with an AI straight from this browser. For hold to talk, use Voice mode or Face to face." : "Connecting…"}
             </motion.span>
           </AnimatePresence>
         } />

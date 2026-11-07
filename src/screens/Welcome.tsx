@@ -115,6 +115,7 @@ export default function Welcome() {
             Or start fresh, with nothing in it yet
           </button>
           <p className="pt-2 text-xs text-faint">{copy.disclaimer}</p>
+          <p className="pt-1 text-xs text-faint">Built by K S Pankaj, Merel Riha D&apos;souza and Kishore Krishna</p>
         </motion.div>
         </div>
       </div>

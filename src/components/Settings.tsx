@@ -4,6 +4,7 @@ import { copy } from "../content/copy";
 import { deleteAllData } from "../lib/db";
 import { speakReply, unlockAudio } from "../lib/hub";
 import { setPrefs, usePrefs, type ThemeChoice } from "../lib/prefs";
+import { brainName } from "../lib/brain";
 import { loadSample } from "../lib/sample";
 import { CloseIcon, SpeakerIcon, TrashIcon } from "./Icons";
 import { spring } from "./ui";
@@ -89,6 +90,11 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
           </button>
         </Row>
 
+        <Row title="AI brain" hint={`Without the laptop hub, replies come from: ${brainName()}. For faster, smarter replies paste a free Groq key (console.groq.com) or an OpenRouter key. It stays only in this browser. What you say is sent to that AI to write the reply.`}>
+          <input value={p.aiKey} onChange={(e) => setPrefs({ aiKey: e.target.value.trim().slice(0, 200) })} type="password" autoComplete="off" spellCheck={false}
+            placeholder="gsk_… or sk-or-… (optional)" className="min-h-12 w-full rounded-2xl border border-line bg-card px-4 font-mono text-sm outline-none focus:border-indigo" />
+        </Row>
+
         <Row title="Campus counsellor" hint="Shown on the Support screen.">
           <input value={p.counsellor} onChange={(e) => setPrefs({ counsellor: e.target.value.slice(0, 40) })} inputMode="tel"
             placeholder="Phone number" className="min-h-12 w-full rounded-2xl border border-line bg-card px-4 outline-none focus:border-indigo" />
@@ -120,7 +126,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
           Show the welcome again
         </button>
 
-        <p className="text-xs leading-relaxed text-faint">{copy.disclaimer} Made by Team HTTP Dino.</p>
+        <p className="text-xs leading-relaxed text-faint">{copy.disclaimer} Built by K S Pankaj, Merel Riha D&apos;souza and Kishore Krishna (Team HTTP Dino).</p>
       </div>
     </Sheet>
   );
